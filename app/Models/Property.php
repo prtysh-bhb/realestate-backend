@@ -24,6 +24,7 @@ class Property extends Model
         'amenities',
         'images',
         'primary_image',
+        'video',
         'documents',
         'status',
         'approval_status',
@@ -43,7 +44,7 @@ class Property extends Model
         'documents' => 'array',
     ];
 
-    protected $appends = ['primary_image_url', 'image_urls', 'document_urls', 'property_type_label'];
+    protected $appends = ['primary_image_url', 'image_urls', 'document_urls', 'property_type_label', 'video_url'];
 
     public function getPrimaryImageUrlAttribute()
     {
@@ -107,5 +108,13 @@ class Property extends Model
     {
         $propertyTypes = config('amenities.property_types', []);
         return $propertyTypes[$this->property_type] ?? $this->property_type;
+    }
+
+    public function getVideoUrlAttribute()
+    {
+        if ($this->video) {
+            return asset('storage/' . $this->video);
+        }
+        return null;
     }
 }

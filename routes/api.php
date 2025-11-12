@@ -3,6 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TwoFactorController;
+use App\Http\Controllers\Api\PasswordResetController;
+
+// Password Reset routes (public)
+Route::post('/password/email', [PasswordResetController::class, 'sendResetLink']);
+Route::post('/password/reset', [PasswordResetController::class, 'resetPassword']);
+Route::post('/password/verify-token', [PasswordResetController::class, 'verifyToken']);
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -59,6 +65,7 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     Route::get('/properties/{id}', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'show']);
     Route::put('/properties/{id}', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'update']);
     Route::delete('/properties/{id}', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'destroy']);
+    Route::delete('/properties/{id}/video', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'deleteVideo']);
     
     // Inquiries
     Route::get('/inquiries', [\App\Http\Controllers\Api\Agent\InquiryController::class, 'index']);

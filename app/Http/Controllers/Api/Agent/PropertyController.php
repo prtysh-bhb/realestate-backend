@@ -56,12 +56,13 @@ class PropertyController extends Controller
             'amenities' => 'nullable|array',
             'images' => 'nullable|array|max:10',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+            'video' => 'nullable|file|mimes:mp4,mov,avi,wmv|max:51200',
             'documents' => 'nullable|array|max:10',
             'documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
         ]);
 
         try {
-            $data = $request->except(['images', 'documents']);
+            $data = $request->except(['images', 'video','documents']);
             $data['agent_id'] = auth()->id();
             
             if ($request->hasFile('images')) {
@@ -75,6 +76,14 @@ class PropertyController extends Controller
                 
                 $data['images'] = $imagePaths;
                 $data['primary_image'] = $imagePaths[0] ?? null;
+            }
+
+            // Handle video upload
+            if ($request->hasFile('video')) {
+                $video = $request->file('video');
+                $filename = uniqid('property_video_') . '.' . $video->getClientOriginalExtension();
+                $path = $video->storeAs('properties/videos', $filename, 'public');
+                $data['video'] = $path;
             }
 
             // Handle document uploads
@@ -156,7 +165,9 @@ class PropertyController extends Controller
             'amenities' => 'nullable|array',
             'images' => 'nullable|array|max:10',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+            'video' => 'nullable|file|mimes:mp4,mov,avi,wmv|max:51200',
             'remove_images' => 'nullable|array', // Indices of images to remove
+            'remove_video' => 'nullable|boolean',
         ]);
 
         try {
@@ -164,7 +175,7 @@ class PropertyController extends Controller
                 ->where('agent_id', auth()->id())
                 ->firstOrFail();
 
-            $data = $request->except(['images', 'remove_images']);
+            $data = $request->except(['images', 'video', 'remove_images', 'remove_video']);
 
             // Handle removing images
             if ($request->has('remove_images')) {
@@ -187,6 +198,14 @@ class PropertyController extends Controller
                 }
             }
 
+            // Handle removing video
+            if ($request->has('remove_video') && $request->remove_video) {
+                if ($property->video) {
+                    Storage::disk('public')->delete($property->video);
+                    $data['video'] = null;
+                }
+            }
+
             // Handle adding new images
             if ($request->hasFile('images')) {
                 $currentImages = $data['images'] ?? $property->images ?? [];
@@ -205,6 +224,19 @@ class PropertyController extends Controller
                 }
             }
 
+            // Handle uploading new video
+            if ($request->hasFile('video')) {
+                // Delete old video if exists
+                if ($property->video) {
+                    Storage::disk('public')->delete($property->video);
+                }
+                
+                $video = $request->file('video');
+                $filename = uniqid('property_video_') . '.' . $video->getClientOriginalExtension();
+                $path = $video->storeAs('properties/videos', $filename, 'public');
+                $data['video'] = $path;
+            }
+
             $property->update($data);
 
             return response()->json([
@@ -218,6 +250,41 @@ class PropertyController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update property: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete property video
+     */
+    public function deleteVideo($id)
+    {
+        try {
+            $property = Property::where('id', $id)
+                ->where('agent_id', auth()->id())
+                ->firstOrFail();
+
+            if (!$property->video) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No video found for this property',
+                ], 404);
+            }
+
+            // Delete video file
+            Storage::disk('public')->delete($property->video);
+
+            // Update database
+            $property->update(['video' => null]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Video deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete video: ' . $e->getMessage(),
             ], 500);
         }
     }
