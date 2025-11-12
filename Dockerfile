@@ -1,5 +1,5 @@
 # -----------------------------------
-# Stage 1: Base PHP Image
+# Stage 1: Base PHP + extensions
 # -----------------------------------
 FROM php:8.3-fpm AS base
 
@@ -16,34 +16,32 @@ COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # -----------------------------------
-# Stage 2: Install dependencies
+# Stage 2: Build App
 # -----------------------------------
 FROM base AS build
 
-# Copy only composer files first (for caching)
-COPY composer.json composer.lock ./
+WORKDIR /var/www/html
 
-# Now that gd extension exists, Composer can safely install deps
-RUN composer install --no-dev --optimize-autoloader --no-interaction || composer install --ignore-platform-reqs
-
-# Copy the rest of the app files
+# Copy everything (so artisan exists before composer runs)
 COPY . .
 
+# Install PHP dependencies (handle potential lock mismatch safely)
+RUN composer install --no-dev --optimize-autoloader --no-interaction || composer install --ignore-platform-reqs
+
+# Optimize Laravel
+RUN php artisan config:clear && php artisan route:clear && php artisan view:clear && php artisan optimize
+
 # -----------------------------------
-# Stage 3: Production Image
+# Stage 3: Production Container
 # -----------------------------------
 FROM base AS production
 
 WORKDIR /var/www/html
 
-# Copy vendor and app from build stage
+# Copy built app and vendor from previous stage
 COPY --from=build /var/www/html /var/www/html
 
-# Clear and optimize Laravel caches
-RUN php artisan config:clear && php artisan route:clear && php artisan view:clear
-RUN php artisan optimize
-
-# Expose port (Railway uses $PORT automatically)
+# Expose Railway’s port
 EXPOSE 8000
 
 # Run migrations then serve app
