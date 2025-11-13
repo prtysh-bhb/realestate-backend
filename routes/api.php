@@ -110,8 +110,8 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
 // Public property routes - Use FULL namespace
 Route::get('/properties', [\App\Http\Controllers\Api\PropertyController::class, 'index']);
 Route::get('/properties/search', [\App\Http\Controllers\Api\PropertyController::class, 'search']);
-Route::get('/properties/{id}', [\App\Http\Controllers\Api\PropertyController::class, 'show']);
-Route::get('/amenities', [\App\Http\Controllers\Api\AmenitiesController::class, 'index']);
+Route::get('/properties/{id}', [\App\Http\Controllers\Api\PropertyController::class, 'show'])->where('id', '[0-9]+');
+Route::get('/properties/attributes', [\App\Http\Controllers\Api\AmenitiesController::class, 'index']);
 
 // Profile routes (for all authenticated users)
 Route::middleware('auth:sanctum')->group(function () {
