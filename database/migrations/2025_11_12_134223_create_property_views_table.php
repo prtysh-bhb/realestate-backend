@@ -16,7 +16,10 @@ return new class extends Migration
             $table->string('user_agent')->nullable();
             $table->timestamp('viewed_at');
             
-            $table->index(['property_id', 'viewed_at']);
+            // Indexes for performance
+            $table->index(['property_id', 'viewed_at'], 'property_views_property_viewed_idx');
+            $table->index('viewed_at', 'property_views_viewed_at_idx');
+            $table->index('user_id', 'property_views_user_id_idx');
         });
     }
 

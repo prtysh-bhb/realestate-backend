@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\Agent;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\Inquiry;
+use App\Models\PropertyView;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -13,91 +15,71 @@ class DashboardController extends Controller
     {
         $agentId = $request->user()->id;
 
-        // Property Statistics
-        $totalProperties = Property::where('agent_id', $agentId)->count();
-        $publishedProperties = Property::where('agent_id', $agentId)
-            ->where('status', 'published')
-            ->count();
-        $draftProperties = Property::where('agent_id', $agentId)
-            ->where('status', 'draft')
-            ->count();
-        $soldProperties = Property::where('agent_id', $agentId)
-            ->where('status', 'sold')
-            ->count();
-        $rentedProperties = Property::where('agent_id', $agentId)
-            ->where('status', 'rented')
-            ->count();
-        
-        // Approval Status
-        $pendingApproval = Property::where('agent_id', $agentId)
-            ->where('approval_status', 'pending')
-            ->count();
-        $approvedProperties = Property::where('agent_id', $agentId)
-            ->where('approval_status', 'approved')
-            ->count();
-        $rejectedProperties = Property::where('agent_id', $agentId)
-            ->where('approval_status', 'rejected')
-            ->count();
+        // Single query to get all property stats with grouping
+        $propertyStats = Property::where('agent_id', $agentId)
+            ->select(
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN status = "published" THEN 1 ELSE 0 END) as published'),
+                DB::raw('SUM(CASE WHEN status = "draft" THEN 1 ELSE 0 END) as draft'),
+                DB::raw('SUM(CASE WHEN status = "sold" THEN 1 ELSE 0 END) as sold'),
+                DB::raw('SUM(CASE WHEN status = "rented" THEN 1 ELSE 0 END) as rented'),
+                DB::raw('SUM(CASE WHEN approval_status = "pending" THEN 1 ELSE 0 END) as pending_approval'),
+                DB::raw('SUM(CASE WHEN approval_status = "approved" THEN 1 ELSE 0 END) as approved'),
+                DB::raw('SUM(CASE WHEN approval_status = "rejected" THEN 1 ELSE 0 END) as rejected'),
+                DB::raw('SUM(CASE WHEN MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW()) THEN 1 ELSE 0 END) as this_month')
+            )
+            ->first();
 
-        // Inquiry Statistics
-        $totalInquiries = Inquiry::where('agent_id', $agentId)->count();
-        $newInquiries = Inquiry::where('agent_id', $agentId)
-            ->where('status', 'new')
-            ->count();
-        $contactedInquiries = Inquiry::where('agent_id', $agentId)
-            ->where('status', 'contacted')
-            ->count();
-        $closedInquiries = Inquiry::where('agent_id', $agentId)
-            ->where('status', 'closed')
-            ->count();
+        // Single query to get all inquiry stats with grouping
+        $inquiryStats = Inquiry::where('agent_id', $agentId)
+            ->select(
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN status = "new" THEN 1 ELSE 0 END) as new'),
+                DB::raw('SUM(CASE WHEN status = "contacted" THEN 1 ELSE 0 END) as contacted'),
+                DB::raw('SUM(CASE WHEN status = "closed" THEN 1 ELSE 0 END) as closed'),
+                DB::raw('SUM(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) as recent'),
+                DB::raw('SUM(CASE WHEN MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW()) THEN 1 ELSE 0 END) as this_month')
+            )
+            ->first();
 
-        // Recent Inquiries (Last 7 days)
-        $recentInquiries = Inquiry::where('agent_id', $agentId)
-            ->where('created_at', '>=', now()->subDays(7))
-            ->count();
+        // Single query to get property views stats
+        $viewStats = PropertyView::whereHas('property', function($q) use ($agentId) {
+                $q->where('agent_id', $agentId);
+            })
+            ->select(
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN MONTH(viewed_at) = MONTH(NOW()) AND YEAR(viewed_at) = YEAR(NOW()) THEN 1 ELSE 0 END) as this_month'),
+                DB::raw('SUM(CASE WHEN DATE(viewed_at) = CURDATE() THEN 1 ELSE 0 END) as today')
+            )
+            ->first();
 
-        // This Month Statistics
-        $thisMonthProperties = Property::where('agent_id', $agentId)
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->count();
-        
-        $thisMonthInquiries = Inquiry::where('agent_id', $agentId)
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->count();
-
-        // Recent Properties (Latest 5)
+        // Efficient query for recent properties (single query with limit)
         $recentProperties = Property::where('agent_id', $agentId)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get(['id', 'title', 'price', 'status', 'approval_status', 'created_at']);
-
-        // Recent Inquiries (Latest 5)
-        $latestInquiries = Inquiry::with(['property:id,title', 'customer:id,name,email'])
-            ->where('agent_id', $agentId)
+            ->select('id', 'title', 'price', 'status', 'approval_status', 'created_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
 
-        // Top Performing Properties (Most inquiries)
-        $topProperties = Property::where('agent_id', $agentId)
-            ->withCount('inquiries')
-            ->orderBy('inquiries_count', 'desc')
+        // Efficient query for recent inquiries with relationships (eager loading)
+        $latestInquiries = Inquiry::with([
+                'property:id,title', 
+                'customer:id,name,email,avatar'
+            ])
+            ->where('agent_id', $agentId)
+            ->select('id', 'property_id', 'customer_id', 'message', 'status', 'created_at')
+            ->orderBy('created_at', 'desc')
             ->limit(5)
-            ->get(['id', 'title', 'price', 'status']);
+            ->get();
 
-        // Property Views Statistics
-        $totalViews = \App\Models\PropertyView::whereHas('property', function($q) use ($agentId) {
-            $q->where('agent_id', $agentId);
-        })->count();
-
-        $thisMonthViews = \App\Models\PropertyView::whereHas('property', function($q) use ($agentId) {
-            $q->where('agent_id', $agentId);
-        })
-        ->whereMonth('viewed_at', now()->month)
-        ->whereYear('viewed_at', now()->year)
-        ->count();
+        // Efficient query for top performing properties (single query with join and grouping)
+        $topProperties = Property::where('properties.agent_id', $agentId)  // ⭐ FIXED: Added 'properties.' prefix
+            ->select('properties.id', 'properties.title', 'properties.price', 'properties.status')
+            ->selectRaw('COUNT(inquiries.id) as inquiries_count')
+            ->leftJoin('inquiries', 'properties.id', '=', 'inquiries.property_id')
+            ->groupBy('properties.id', 'properties.title', 'properties.price', 'properties.status')
+            ->orderByDesc('inquiries_count')
+            ->limit(5)
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -105,27 +87,28 @@ class DashboardController extends Controller
             'data' => [
                 'stats' => [
                     'properties' => [
-                        'total' => $totalProperties,
-                        'published' => $publishedProperties,
-                        'draft' => $draftProperties,
-                        'sold' => $soldProperties,
-                        'rented' => $rentedProperties,
-                        'pending_approval' => $pendingApproval,
-                        'approved' => $approvedProperties,
-                        'rejected' => $rejectedProperties,
-                        'this_month' => $thisMonthProperties,
+                        'total' => $propertyStats->total ?? 0,
+                        'published' => $propertyStats->published ?? 0,
+                        'draft' => $propertyStats->draft ?? 0,
+                        'sold' => $propertyStats->sold ?? 0,
+                        'rented' => $propertyStats->rented ?? 0,
+                        'pending_approval' => $propertyStats->pending_approval ?? 0,
+                        'approved' => $propertyStats->approved ?? 0,
+                        'rejected' => $propertyStats->rejected ?? 0,
+                        'this_month' => $propertyStats->this_month ?? 0,
                     ],
                     'inquiries' => [
-                        'total' => $totalInquiries,
-                        'new' => $newInquiries,
-                        'contacted' => $contactedInquiries,
-                        'closed' => $closedInquiries,
-                        'recent' => $recentInquiries,
-                        'this_month' => $thisMonthInquiries,
+                        'total' => $inquiryStats->total ?? 0,
+                        'new' => $inquiryStats->new ?? 0,
+                        'contacted' => $inquiryStats->contacted ?? 0,
+                        'closed' => $inquiryStats->closed ?? 0,
+                        'recent' => $inquiryStats->recent ?? 0,
+                        'this_month' => $inquiryStats->this_month ?? 0,
                     ],
                     'views' => [
-                        'total' => $totalViews,
-                        'this_month' => $thisMonthViews,
+                        'total' => $viewStats->total ?? 0,
+                        'this_month' => $viewStats->this_month ?? 0,
+                        'today' => $viewStats->today ?? 0,
                     ],
                 ],
                 'recent_properties' => $recentProperties,
