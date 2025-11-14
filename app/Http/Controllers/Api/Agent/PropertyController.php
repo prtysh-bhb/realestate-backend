@@ -306,4 +306,82 @@ class PropertyController extends Controller
             ], 404);
         }
     }
+
+    /**
+     * Get property analytics
+     */
+    public function analytics(Request $request, $id)
+    {
+        try {
+            $property = Property::where('id', $id)
+                ->where('agent_id', auth()->id())
+                ->firstOrFail();
+
+            // Total views
+            $totalViews = $property->views()->count();
+
+            // Views this month
+            $thisMonthViews = $property->views()
+                ->whereMonth('viewed_at', now()->month)
+                ->whereYear('viewed_at', now()->year)
+                ->count();
+
+            // Views today
+            $todayViews = $property->views()
+                ->whereDate('viewed_at', today())
+                ->count();
+
+            // Views last 7 days
+            $last7DaysViews = $property->views()
+                ->where('viewed_at', '>=', now()->subDays(7))
+                ->count();
+
+            // Views by date (last 30 days)
+            $viewsByDate = $property->views()
+                ->where('viewed_at', '>=', now()->subDays(30))
+                ->selectRaw('DATE(viewed_at) as date, COUNT(*) as count')
+                ->groupBy('date')
+                ->orderBy('date', 'asc')
+                ->get();
+
+            // Unique visitors
+            $uniqueVisitors = $property->views()
+                ->distinct('ip_address')
+                ->count('ip_address');
+
+            // Registered vs Guest views
+            $registeredViews = $property->views()
+                ->whereNotNull('user_id')
+                ->count();
+            $guestViews = $property->views()
+                ->whereNull('user_id')
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Property analytics retrieved successfully',
+                'data' => [
+                    'property' => [
+                        'id' => $property->id,
+                        'title' => $property->title,
+                    ],
+                    'analytics' => [
+                        'total_views' => $totalViews,
+                        'this_month_views' => $thisMonthViews,
+                        'today_views' => $todayViews,
+                        'last_7_days_views' => $last7DaysViews,
+                        'unique_visitors' => $uniqueVisitors,
+                        'registered_views' => $registeredViews,
+                        'guest_views' => $guestViews,
+                        'views_by_date' => $viewsByDate,
+                    ],
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 404);
+        }
+    }
 }

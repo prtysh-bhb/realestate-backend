@@ -87,6 +87,18 @@ class DashboardController extends Controller
             ->limit(5)
             ->get(['id', 'title', 'price', 'status']);
 
+        // Property Views Statistics
+        $totalViews = \App\Models\PropertyView::whereHas('property', function($q) use ($agentId) {
+            $q->where('agent_id', $agentId);
+        })->count();
+
+        $thisMonthViews = \App\Models\PropertyView::whereHas('property', function($q) use ($agentId) {
+            $q->where('agent_id', $agentId);
+        })
+        ->whereMonth('viewed_at', now()->month)
+        ->whereYear('viewed_at', now()->year)
+        ->count();
+
         return response()->json([
             'success' => true,
             'message' => 'Dashboard data retrieved successfully',
@@ -110,6 +122,10 @@ class DashboardController extends Controller
                         'closed' => $closedInquiries,
                         'recent' => $recentInquiries,
                         'this_month' => $thisMonthInquiries,
+                    ],
+                    'views' => [
+                        'total' => $totalViews,
+                        'this_month' => $thisMonthViews,
                     ],
                 ],
                 'recent_properties' => $recentProperties,

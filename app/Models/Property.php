@@ -117,4 +117,14 @@ class Property extends Model
         }
         return null;
     }
+
+    public function views()
+    {
+        return $this->hasMany(PropertyView::class);
+    }
+
+    public function viewsCount()
+    {
+        return $this->views()->count();
+    }
 }
