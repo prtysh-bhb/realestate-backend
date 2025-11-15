@@ -45,4 +45,7 @@ COPY --from=build /var/www/html /var/www/html
 EXPOSE 8000
 
 # Run migrations then serve app
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+
+CMD php artisan migrate --force && php -d display_errors=1 -d error_log=/dev/stderr -S 0.0.0.0:$PORT -t public
