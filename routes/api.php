@@ -25,6 +25,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/2fa/enable', [TwoFactorController::class, 'enable']);
     Route::post('/2fa/disable', [TwoFactorController::class, 'disable']);
     Route::post('/2fa/verify', [TwoFactorController::class, 'verify']);
+
+    // Subscription Plans - View Available Plans (Agent/Customer can see)
+    Route::get('/subscription-plans', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'index']);
+    Route::get('/subscription-plans/{id}', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'show']);
 });
 
 // Admin routes
@@ -46,6 +50,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/properties/{id}/approve', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'approve']);
     Route::post('/properties/{id}/reject', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'reject']);
     Route::put('/properties/{id}/status', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'updateStatus']);
+    Route::post('/properties/{id}/feature', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'markFeatured']);
+    Route::post('/properties/{id}/unfeature', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'unmarkFeatured']);
 
     // User Management
     Route::post('/users/{userId}/deactivate', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'deactivate']);
@@ -53,6 +59,14 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/users/{userId}/status', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'status']);
     Route::get('/users', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'index']);
     Route::get('/export-users', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'export']);
+
+    // Subscription Plans Management (Admin Only)
+    Route::get('/subscription-plans', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'index']);
+    Route::post('/subscription-plans', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'store']);
+    Route::get('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'show']);
+    Route::put('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'update']);
+    Route::delete('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'destroy']);
+    Route::post('/subscription-plans/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'toggleStatus']);
 });
 
 // Agent routes
@@ -66,6 +80,7 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     Route::put('/properties/{id}', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'update']);
     Route::delete('/properties/{id}', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'destroy']);
     Route::delete('/properties/{id}/video', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'deleteVideo']);
+    Route::get('/properties/{id}/analytics', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'analytics']);
     
     // Inquiries
     Route::get('/inquiries', [\App\Http\Controllers\Api\Agent\InquiryController::class, 'index']);
@@ -89,7 +104,6 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     Route::put('/inquiries/{id}/stage', [\App\Http\Controllers\Api\Agent\InquiryController::class, 'updateStage']);
     Route::post('/inquiries/{id}/notes', [\App\Http\Controllers\Api\Agent\InquiryController::class, 'addNote']);
     Route::get('/inquiries/{id}/history', [\App\Http\Controllers\Api\Agent\InquiryController::class, 'history']);
-    Route::get('/properties/{id}/analytics', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'analytics']);
 });
 
 // Customer routes
