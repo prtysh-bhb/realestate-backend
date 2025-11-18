@@ -137,3 +137,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/profile/avatar', [\App\Http\Controllers\Api\ProfileController::class, 'deleteAvatar']);
     Route::delete('/profile/account', [\App\Http\Controllers\Api\ProfileController::class, 'deleteAccount']);
 });
+
+// Payment Routes (Authenticated users)
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Production endpoints (for frontend)
+    Route::post('/payments/create-intent', [\App\Http\Controllers\Api\PaymentController::class, 'createPaymentIntent']);
+    Route::post('/payments/verify', [\App\Http\Controllers\Api\PaymentController::class, 'verifyPayment']);
+    
+    // Testing endpoints (backend only - auto-confirm)
+    Route::post('/payments/create-and-confirm', [\App\Http\Controllers\Api\PaymentController::class, 'createAndConfirmPayment']);
+    Route::post('/payments/confirm', [\App\Http\Controllers\Api\PaymentController::class, 'confirmPayment']);
+    
+    // Check payment status
+    Route::post('/payments/check-status', [\App\Http\Controllers\Api\PaymentController::class, 'checkPaymentStatus']);
+    
+    // Subscriptions
+    Route::get('/subscriptions/my', [\App\Http\Controllers\Api\PaymentController::class, 'mySubscriptions']);
+    Route::get('/subscriptions/active', [\App\Http\Controllers\Api\PaymentController::class, 'activeSubscription']);
+    Route::post('/subscriptions/{id}/cancel', [\App\Http\Controllers\Api\PaymentController::class, 'cancelSubscription']);
+    
+    // Payment history
+    Route::get('/payments/history', [\App\Http\Controllers\Api\PaymentController::class, 'paymentHistory']);
+
+    // / ========== TESTING ENDPOINTS (Backend Only) ==========
+    Route::post('/payments/test/create', [\App\Http\Controllers\Api\PaymentController::class, 'testCreateIntent']);
+    Route::post('/payments/test/confirm', [\App\Http\Controllers\Api\PaymentController::class, 'testConfirmIntent']);
+});
