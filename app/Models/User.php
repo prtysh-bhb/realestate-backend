@@ -105,4 +105,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Payment::class);
     }
+
+    public function agentAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'agent_id');
+    }
+
+    public function customerAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'customer_id');
+    }
 }

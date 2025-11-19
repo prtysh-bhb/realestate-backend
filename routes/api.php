@@ -104,6 +104,16 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     Route::put('/inquiries/{id}/stage', [\App\Http\Controllers\Api\Agent\InquiryController::class, 'updateStage']);
     Route::post('/inquiries/{id}/notes', [\App\Http\Controllers\Api\Agent\InquiryController::class, 'addNote']);
     Route::get('/inquiries/{id}/history', [\App\Http\Controllers\Api\Agent\InquiryController::class, 'history']);
+
+    // Appointments
+    Route::get('/appointments', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'index']);
+    Route::post('/appointments', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'store']);
+    Route::get('/appointments/{id}', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'show']);
+    Route::put('/appointments/{id}', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'update']);
+    Route::post('/appointments/{id}/confirm', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'confirm']);
+    Route::post('/appointments/{id}/complete', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'complete']);
+    Route::post('/appointments/{id}/cancel', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'cancel']);
+    Route::get('/appointments/availability/check', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'availability']);
 });
 
 // Customer routes
@@ -120,6 +130,13 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::get('/inquiries', [\App\Http\Controllers\Api\Customer\InquiryController::class, 'index']);
     Route::post('/inquiries/{propertyId}', [\App\Http\Controllers\Api\Customer\InquiryController::class, 'store']);
     Route::get('/inquiries/{id}', [\App\Http\Controllers\Api\Customer\InquiryController::class, 'show']);
+
+    // Appointments
+    Route::get('/appointments', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'index']);
+    Route::post('/appointments', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'store']);
+    Route::get('/appointments/{id}', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'show']);
+    Route::post('/appointments/{id}/cancel', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'cancel']);
+    Route::get('/properties/{propertyId}/availability', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
 });
 
 // Public property routes - Use FULL namespace

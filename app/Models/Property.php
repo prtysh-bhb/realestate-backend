@@ -127,4 +127,9 @@ class Property extends Model
     {
         return $this->views()->count();
     }
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }
