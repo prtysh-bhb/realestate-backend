@@ -31,6 +31,8 @@ class Property extends Model
         'rejection_reason',
         'approved_at',
         'approved_by',
+        'is_featured',      
+        'featured_until',
     ];
 
     protected $casts = [
@@ -39,9 +41,11 @@ class Property extends Model
         'bedrooms' => 'integer',
         'bathrooms' => 'integer',
         'approved_at' => 'datetime',
+        'featured_until' => 'datetime',
         'amenities' => 'array',
         'images' => 'array',
         'documents' => 'array',
+        'is_featured' => 'boolean',
     ];
 
     protected $appends = ['primary_image_url', 'image_urls', 'document_urls', 'property_type_label', 'video_url'];

@@ -114,6 +114,13 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     Route::post('/appointments/{id}/complete', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'complete']);
     Route::post('/appointments/{id}/cancel', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'cancel']);
     Route::get('/appointments/availability/check', [\App\Http\Controllers\Api\Agent\AppointmentController::class, 'availability']);
+
+    // Subscription info
+    Route::get('/subscription/info', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'subscriptionInfo']);
+    
+    // Featured property management
+    Route::post('/properties/{id}/mark-featured', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'markAsFeatured']);
+    Route::post('/properties/{id}/remove-featured', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'removeFeatured']);
 });
 
 // Customer routes

@@ -52,4 +52,67 @@ class UserSubscription extends Model
     {
         return $this->ends_at->isPast();
     }
+
+    /**
+     * Check if user can create more properties
+     */
+    public function canCreateProperty($currentCount)
+    {
+        // 0 means unlimited
+        if ($this->plan->property_limit === 0) {
+            return true;
+        }
+
+        return $currentCount < $this->plan->property_limit;
+    }
+
+    /**
+     * Check if user can feature more properties
+     */
+    public function canFeatureProperty()
+    {
+        // Count current month's featured properties
+        $currentFeaturedCount = \App\Models\Property::where('agent_id', $this->user_id)
+            ->where('is_featured', true)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        // 0 means unlimited
+        if ($this->plan->featured_limit === 0) {
+            return [
+                'allowed' => true,
+                'remaining' => 'unlimited',
+                'used' => $currentFeaturedCount,
+            ];
+        }
+
+        return [
+            'allowed' => $currentFeaturedCount < $this->plan->featured_limit,
+            'remaining' => max(0, $this->plan->featured_limit - $currentFeaturedCount),
+            'used' => $currentFeaturedCount,
+            'limit' => $this->plan->featured_limit,
+        ];
+    }
+
+    /**
+     * Get remaining property slots
+     */
+    public function getRemainingPropertySlots()
+    {
+        $currentCount = \App\Models\Property::where('agent_id', $this->user_id)->count();
+
+        if ($this->plan->property_limit === 0) {
+            return [
+                'remaining' => 'unlimited',
+                'used' => $currentCount,
+            ];
+        }
+
+        return [
+            'remaining' => max(0, $this->plan->property_limit - $currentCount),
+            'used' => $currentCount,
+            'limit' => $this->plan->property_limit,
+        ];
+    }
 }

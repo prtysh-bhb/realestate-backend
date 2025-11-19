@@ -39,6 +39,32 @@ class PropertyController extends Controller
 
     public function store(Request $request)
     {
+
+        // Get subscription
+        $subscription = auth()->user()->activeSubscription()->with('plan')->first();
+
+        if (!$subscription) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You need an active subscription to create properties',
+            ], 403);
+        }
+
+        // Check property limit
+        $currentPropertyCount = Property::where('agent_id', auth()->id())->count();
+        
+        if (!$subscription->canCreateProperty($currentPropertyCount)) {
+            return response()->json([
+                'success' => false,
+                'message' => "You have reached your property limit of {$subscription->plan->property_limit}. Please upgrade your plan.",
+                'data' => [
+                    'current_count' => $currentPropertyCount,
+                    'limit' => $subscription->plan->property_limit,
+                    'plan_name' => $subscription->plan->name,
+                ],
+            ], 403);
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -383,5 +409,132 @@ class PropertyController extends Controller
                 'message' => $e->getMessage(),
             ], 404);
         }
+    }
+
+    /**
+     * Mark property as featured (with subscription check)
+     */
+    public function markAsFeatured($id)
+    {
+        try {
+            $property = Property::where('agent_id', auth()->id())
+                ->findOrFail($id);
+
+            // Get subscription
+            $subscription = auth()->user()->activeSubscription()->with('plan')->first();
+
+            if (!$subscription) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You need an active subscription to feature properties',
+                ], 403);
+            }
+
+            // Check featured limit
+            $featuredCheck = $subscription->canFeatureProperty();
+
+            if (!$featuredCheck['allowed']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "You have reached your featured property limit of {$featuredCheck['limit']} for this month.",
+                    'data' => [
+                        'used' => $featuredCheck['used'],
+                        'limit' => $featuredCheck['limit'],
+                        'remaining' => $featuredCheck['remaining'],
+                        'plan_name' => $subscription->plan->name,
+                    ],
+                ], 403);
+            }
+
+            // Mark as featured
+            $property->update([
+                'is_featured' => true,
+                'featured_until' => now()->addDays(30), // Featured for 30 days
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Property marked as featured successfully',
+                'data' => [
+                    'property' => $property,
+                    'featured_remaining' => $featuredCheck['remaining'] === 'unlimited' ? 'unlimited' : $featuredCheck['remaining'] - 1,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove featured status
+     */
+    public function removeFeatured($id)
+    {
+        try {
+            $property = Property::where('agent_id', auth()->id())
+                ->findOrFail($id);
+
+            $property->update([
+                'is_featured' => false,
+                'featured_until' => null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Featured status removed successfully',
+                'data' => [
+                    'property' => $property,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get subscription info and limits
+     */
+    public function subscriptionInfo()
+    {
+        $subscription = auth()->user()->activeSubscription()->with('plan')->first();
+
+        if (!$subscription) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active subscription found',
+                'data' => [
+                    'has_subscription' => false,
+                ],
+            ]);
+        }
+
+        $propertyLimits = $subscription->getRemainingPropertySlots();
+        $featuredLimits = $subscription->canFeatureProperty();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'has_subscription' => true,
+                'subscription' => [
+                    'id' => $subscription->id,
+                    'status' => $subscription->status,
+                    'starts_at' => $subscription->starts_at,
+                    'ends_at' => $subscription->ends_at,
+                    'plan' => $subscription->plan,
+                ],
+                'limits' => [
+                    'properties' => $propertyLimits,
+                    'featured' => $featuredLimits,
+                    'images_per_property' => $subscription->plan->image_limit,
+                    'video_allowed' => $subscription->plan->video_allowed,
+                ],
+            ],
+        ]);
     }
 }
