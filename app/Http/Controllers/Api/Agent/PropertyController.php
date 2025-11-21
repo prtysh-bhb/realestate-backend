@@ -40,30 +40,30 @@ class PropertyController extends Controller
     public function store(Request $request)
     {
 
-        // Get subscription
-        $subscription = auth()->user()->activeSubscription()->with('plan')->first();
+        // // Get subscription
+        // $subscription = auth()->user()->activeSubscription()->with('plan')->first();
 
-        if (!$subscription) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You need an active subscription to create properties',
-            ], 403);
-        }
+        // if (!$subscription) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'You need an active subscription to create properties',
+        //     ], 403);
+        // }
 
-        // Check property limit
-        $currentPropertyCount = Property::where('agent_id', auth()->id())->count();
+        // // Check property limit
+        // $currentPropertyCount = Property::where('agent_id', auth()->id())->count();
         
-        if (!$subscription->canCreateProperty($currentPropertyCount)) {
-            return response()->json([
-                'success' => false,
-                'message' => "You have reached your property limit of {$subscription->plan->property_limit}. Please upgrade your plan.",
-                'data' => [
-                    'current_count' => $currentPropertyCount,
-                    'limit' => $subscription->plan->property_limit,
-                    'plan_name' => $subscription->plan->name,
-                ],
-            ], 403);
-        }
+        // if (!$subscription->canCreateProperty($currentPropertyCount)) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => "You have reached your property limit of {$subscription->plan->property_limit}. Please upgrade your plan.",
+        //         'data' => [
+        //             'current_count' => $currentPropertyCount,
+        //             'limit' => $subscription->plan->property_limit,
+        //             'plan_name' => $subscription->plan->name,
+        //         ],
+        //     ], 403);
+        // }
 
         $request->validate([
             'title' => 'required|string|max:100',
