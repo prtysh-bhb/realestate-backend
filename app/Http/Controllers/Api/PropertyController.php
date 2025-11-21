@@ -70,6 +70,18 @@ class PropertyController extends Controller
             $userId = auth()->guard('sanctum')->check() ? auth()->guard('sanctum')->id() : null;
             $property = $this->propertyService->getPublicPropertyById($id, $userId);
 
+            // Track view
+            \App\Models\PropertyView::create([
+                'property_id' => $id,
+                'user_id' => $userId,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'viewed_at' => now(),
+            ]);
+
+            // Add view count to response
+            $property->views_count = $property->viewsCount();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Property details retrieved successfully',

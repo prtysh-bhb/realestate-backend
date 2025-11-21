@@ -6,23 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function up()
     {
         Schema::table('properties', function (Blueprint $table) {
-            $table->string('video')->nullable()->after('primary_image');
+            $table->boolean('is_featured')->default(false)->after('approval_status');
+            $table->timestamp('featured_until')->nullable()->after('is_featured');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
+    public function down()
     {
         Schema::table('properties', function (Blueprint $table) {
-            $table->dropColumn('video');
+            $table->dropColumn(['is_featured', 'featured_until']);
         });
     }
 };
