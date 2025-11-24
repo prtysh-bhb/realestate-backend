@@ -537,4 +537,51 @@ class PropertyController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Get subscription status and check if expired
+     */
+    public function checkSubscriptionStatus()
+    {
+        $user = auth()->user();
+        $subscription = $user->activeSubscription()->with('plan')->first();
+
+        if (!$subscription) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active subscription',
+                'data' => [
+                    'has_subscription' => false,
+                    'status' => 'no_subscription',
+                ],
+            ]);
+        }
+
+        // Check if expired
+        $isExpired = $subscription->ends_at && $subscription->ends_at->isPast();
+
+        if ($isExpired && $subscription->status === 'active') {
+            // Update to expired
+            $subscription->update(['status' => 'expired']);
+            
+            // Remove featured status from properties
+            \App\Models\Property::where('agent_id', $user->id)
+                ->where('is_featured', true)
+                ->update([
+                    'is_featured' => false,
+                    'featured_until' => null,
+                ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'has_subscription' => true,
+                'subscription' => $subscription,
+                'is_expired' => $isExpired,
+                'days_left' => $subscription->ends_at ? now()->diffInDays($subscription->ends_at, false) : null,
+                'expiring_soon' => $subscription->ends_at && $subscription->ends_at->diffInDays(now()) <= 7,
+            ],
+        ]);
+    }
 }

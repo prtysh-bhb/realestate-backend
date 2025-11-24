@@ -137,6 +137,9 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     // Quick create reminders
     Route::post('/inquiries/{inquiryId}/create-reminder', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'createFromInquiry']);
     Route::post('/appointments/{appointmentId}/create-reminder', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'createFromAppointment']);
+
+    // Subscription status check
+    Route::get('/subscription/status', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'checkSubscriptionStatus']);
 });
 
 // Customer routes

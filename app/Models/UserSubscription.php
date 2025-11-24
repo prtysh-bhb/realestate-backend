@@ -115,4 +115,48 @@ class UserSubscription extends Model
             'limit' => $this->plan->property_limit,
         ];
     }
+
+    /**
+     * Check if subscription is expired (including real-time check)
+     */
+    public function isExpiredNow()
+    {
+        if ($this->status === 'expired') {
+            return true;
+        }
+
+        if ($this->ends_at && $this->ends_at->isPast()) {
+            // Update status
+            $this->update(['status' => 'expired']);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get days until expiry
+     */
+    public function daysUntilExpiry()
+    {
+        if (!$this->ends_at) {
+            return null;
+        }
+
+        $days = now()->diffInDays($this->ends_at, false);
+        return $days >= 0 ? $days : 0;
+    }
+
+    /**
+     * Check if expiring soon (within 7 days)
+     */
+    public function isExpiringSoon($days = 7)
+    {
+        if (!$this->ends_at) {
+            return false;
+        }
+
+        return $this->ends_at->isFuture() && 
+            $this->ends_at->diffInDays(now()) <= $days;
+    }
 }
