@@ -122,6 +122,21 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     // Featured property management
     Route::post('/properties/{id}/mark-featured', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'markAsFeatured']);
     Route::post('/properties/{id}/remove-featured', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'removeFeatured']);
+
+    // Reminders
+    Route::get('/reminders', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'index']);
+    Route::post('/reminders', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'store']);
+    Route::get('/reminders/summary', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'summary']);
+    Route::get('/reminders/{id}', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'show']);
+    Route::put('/reminders/{id}', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'update']);
+    Route::post('/reminders/{id}/complete', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'complete']);
+    Route::post('/reminders/{id}/snooze', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'snooze']);
+    Route::post('/reminders/{id}/cancel', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'cancel']);
+    Route::delete('/reminders/{id}', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'destroy']);
+    
+    // Quick create reminders
+    Route::post('/inquiries/{inquiryId}/create-reminder', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'createFromInquiry']);
+    Route::post('/appointments/{appointmentId}/create-reminder', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'createFromAppointment']);
 });
 
 // Customer routes
