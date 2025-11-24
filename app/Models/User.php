@@ -115,4 +115,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Appointment::class, 'customer_id');
     }
+
+    public function reminders()
+    {
+        return $this->hasMany(Reminder::class, 'agent_id');
+    }
 }
