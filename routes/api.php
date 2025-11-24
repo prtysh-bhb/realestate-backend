@@ -72,6 +72,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 // Agent routes
 Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Api\Agent\DashboardController::class, 'index']);
+    Route::get('/customers', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'index']);
     
     // Property management
     Route::get('/properties', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'index']);
