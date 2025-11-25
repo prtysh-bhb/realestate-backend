@@ -39,7 +39,6 @@ class PropertyController extends Controller
 
     public function store(Request $request)
     {
-
         // Get subscription
         $subscription = auth()->user()->activeSubscription()->with('plan')->first();
 
@@ -47,16 +46,27 @@ class PropertyController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'You need an active subscription to create properties',
+                'error_code' => 'NO_SUBSCRIPTION',
+            ], 403);
+        }
+
+        // Check if subscription is expired
+        if ($subscription->isExpired()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your subscription has expired. Please renew to continue.',
+                'error_code' => 'SUBSCRIPTION_EXPIRED',
             ], 403);
         }
 
         // Check property limit
         $currentPropertyCount = Property::where('agent_id', auth()->id())->count();
         
-        if (!$subscription->canCreateProperty($currentPropertyCount)) {
+        if ($subscription->plan->property_limit > 0 && $currentPropertyCount >= $subscription->plan->property_limit) {
             return response()->json([
                 'success' => false,
                 'message' => "You have reached your property limit of {$subscription->plan->property_limit}. Please upgrade your plan.",
+                'error_code' => 'PROPERTY_LIMIT_REACHED',
                 'data' => [
                     'current_count' => $currentPropertyCount,
                     'limit' => $subscription->plan->property_limit,
@@ -65,6 +75,7 @@ class PropertyController extends Controller
             ], 403);
         }
 
+        // Validate basic fields first
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -80,12 +91,41 @@ class PropertyController extends Controller
             'bathrooms' => 'required|integer|min:0',
             'area' => 'required|numeric|min:0',
             'amenities' => 'nullable|array',
-            'images' => 'nullable|array|max:10',
+            'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'video' => 'nullable|file|mimes:mp4,mov,avi,wmv|max:51200',
             'documents' => 'nullable|array|max:10',
             'documents.*' => 'file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
         ]);
+
+        if ($request->hasFile('images')) {
+            $imageCount = count($request->file('images'));
+            
+            if ($subscription->plan->image_limit > 0 && $imageCount > $subscription->plan->image_limit) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "You can only upload {$subscription->plan->image_limit} images per property with your current plan.",
+                    'error_code' => 'IMAGE_LIMIT_EXCEEDED',
+                    'data' => [
+                        'uploaded_count' => $imageCount,
+                        'limit' => $subscription->plan->image_limit,
+                        'plan_name' => $subscription->plan->name,
+                    ],
+                ], 403);
+            }
+        }
+
+        if ($request->hasFile('video') && !$subscription->plan->video_allowed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Video uploads are not allowed in your current plan. Please upgrade to upload videos.',
+                'error_code' => 'VIDEO_NOT_ALLOWED',
+                'data' => [
+                    'plan_name' => $subscription->plan->name,
+                    'video_allowed' => false,
+                ],
+            ], 403);
+        }
 
         try {
             $data = $request->except(['images', 'video','documents']);
@@ -139,7 +179,14 @@ class PropertyController extends Controller
                 'success' => true,
                 'message' => 'Property created successfully',
                 'data' => [
-                    'property' => $property
+                    'property' => $property,
+                    'subscription_info' => [
+                        'properties_remaining' => $subscription->plan->property_limit > 0 
+                            ? max(0, $subscription->plan->property_limit - ($currentPropertyCount + 1))
+                            : 'unlimited',
+                        'images_allowed' => $subscription->plan->image_limit,
+                        'video_allowed' => $subscription->plan->video_allowed,
+                    ],
                 ]
             ], 201);
         } catch (\Exception $e) {
@@ -148,7 +195,7 @@ class PropertyController extends Controller
                 'message' => 'Failed to create property: ' . $e->getMessage(),
             ], 500);
         }
-}
+    }
 
     // View specific property
     public function show(Request $request, $id)
@@ -174,6 +221,26 @@ class PropertyController extends Controller
     // Update property
     public function update(Request $request, $id)
     {
+        // Get subscription
+        $subscription = auth()->user()->activeSubscription()->with('plan')->first();
+
+        if (!$subscription) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You need an active subscription to update properties',
+                'error_code' => 'NO_SUBSCRIPTION',
+            ], 403);
+        }
+
+        // Check if subscription is expired
+        if ($subscription->isExpired()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your subscription has expired. Please renew to continue.',
+                'error_code' => 'SUBSCRIPTION_EXPIRED',
+            ], 403);
+        }
+
         $request->validate([
             'title' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
@@ -189,10 +256,10 @@ class PropertyController extends Controller
             'bathrooms' => 'sometimes|integer|min:0',
             'area' => 'sometimes|numeric|min:0',
             'amenities' => 'nullable|array',
-            'images' => 'nullable|array|max:10',
+            'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'video' => 'nullable|file|mimes:mp4,mov,avi,wmv|max:51200',
-            'remove_images' => 'nullable|array', // Indices of images to remove
+            'remove_images' => 'nullable|array',
             'remove_video' => 'nullable|boolean',
         ]);
 
@@ -200,6 +267,42 @@ class PropertyController extends Controller
             $property = Property::where('id', $id)
                 ->where('agent_id', auth()->id())
                 ->firstOrFail();
+
+            if ($request->hasFile('images')) {
+                $existingImageCount = is_array($property->images) ? count($property->images) : 0;
+                $newImageCount = count($request->file('images'));
+                
+                // Calculate images after removal
+                $removeCount = $request->has('remove_images') ? count($request->remove_images) : 0;
+                $totalImages = ($existingImageCount - $removeCount) + $newImageCount;
+
+                if ($subscription->plan->image_limit > 0 && $totalImages > $subscription->plan->image_limit) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Total images cannot exceed {$subscription->plan->image_limit} images per property.",
+                        'error_code' => 'IMAGE_LIMIT_EXCEEDED',
+                        'data' => [
+                            'existing_count' => $existingImageCount,
+                            'removing_count' => $removeCount,
+                            'adding_count' => $newImageCount,
+                            'total_after_update' => $totalImages,
+                            'limit' => $subscription->plan->image_limit,
+                        ],
+                    ], 403);
+                }
+            }
+
+            if ($request->hasFile('video') && !$subscription->plan->video_allowed) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Video uploads are not allowed in your current plan. Please upgrade to upload videos.',
+                    'error_code' => 'VIDEO_NOT_ALLOWED',
+                    'data' => [
+                        'plan_name' => $subscription->plan->name,
+                        'video_allowed' => false,
+                    ],
+                ], 403);
+            }
 
             $data = $request->except(['images', 'video', 'remove_images', 'remove_video']);
 
@@ -210,15 +313,13 @@ class PropertyController extends Controller
                 
                 foreach ($removeIndices as $index) {
                     if (isset($currentImages[$index])) {
-                        // Delete file from storage
                         Storage::disk('public')->delete($currentImages[$index]);
                         unset($currentImages[$index]);
                     }
                 }
                 
-                $data['images'] = array_values($currentImages); // Re-index array
+                $data['images'] = array_values($currentImages);
                 
-                // Update primary image if removed
                 if ($property->primary_image && !in_array($property->primary_image, $data['images'])) {
                     $data['primary_image'] = $data['images'][0] ?? null;
                 }
@@ -244,7 +345,6 @@ class PropertyController extends Controller
                 
                 $data['images'] = $currentImages;
                 
-                // Set primary if none exists
                 if (!$property->primary_image && !empty($data['images'])) {
                     $data['primary_image'] = $data['images'][0];
                 }
@@ -252,7 +352,6 @@ class PropertyController extends Controller
 
             // Handle uploading new video
             if ($request->hasFile('video')) {
-                // Delete old video if exists
                 if ($property->video) {
                     Storage::disk('public')->delete($property->video);
                 }
@@ -581,6 +680,85 @@ class PropertyController extends Controller
                 'is_expired' => $isExpired,
                 'days_left' => $subscription->ends_at ? now()->diffInDays($subscription->ends_at, false) : null,
                 'expiring_soon' => $subscription->ends_at && $subscription->ends_at->diffInDays(now()) <= 7,
+            ],
+        ]);
+    }
+
+    /**
+     * Check what limits agent has for property creation/update
+     */
+    public function checkLimits()
+    {
+        $user = auth()->user();
+        $subscription = $user->activeSubscription()->with('plan')->first();
+
+        if (!$subscription) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active subscription',
+                'data' => [
+                    'has_subscription' => false,
+                ],
+            ]);
+        }
+
+        // Check if expired
+        if ($subscription->isExpired()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Subscription expired',
+                'data' => [
+                    'has_subscription' => true,
+                    'is_expired' => true,
+                ],
+            ]);
+        }
+
+        // Get current property count
+        $currentPropertyCount = Property::where('agent_id', $user->id)->count();
+
+        // Get featured count this month
+        $currentFeaturedCount = Property::where('agent_id', $user->id)
+            ->where('is_featured', true)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'has_subscription' => true,
+                'is_expired' => false,
+                'plan' => [
+                    'name' => $subscription->plan->name,
+                    'property_limit' => $subscription->plan->property_limit,
+                    'featured_limit' => $subscription->plan->featured_limit,
+                    'image_limit' => $subscription->plan->image_limit,
+                    'video_allowed' => $subscription->plan->video_allowed,
+                    'priority_support' => $subscription->plan->priority_support,
+                ],
+                'usage' => [
+                    'properties' => [
+                        'used' => $currentPropertyCount,
+                        'limit' => $subscription->plan->property_limit,
+                        'remaining' => $subscription->plan->property_limit > 0 
+                            ? max(0, $subscription->plan->property_limit - $currentPropertyCount)
+                            : 'unlimited',
+                        'can_create' => $subscription->plan->property_limit === 0 || 
+                                    $currentPropertyCount < $subscription->plan->property_limit,
+                    ],
+                    'featured' => [
+                        'used' => $currentFeaturedCount,
+                        'limit' => $subscription->plan->featured_limit,
+                        'remaining' => $subscription->plan->featured_limit > 0 
+                            ? max(0, $subscription->plan->featured_limit - $currentFeaturedCount)
+                            : 'unlimited',
+                        'can_feature' => $subscription->plan->featured_limit === 0 || 
+                                        $currentFeaturedCount < $subscription->plan->featured_limit,
+                    ],
+                    'images_per_property' => $subscription->plan->image_limit,
+                    'video_allowed' => $subscription->plan->video_allowed,
+                ],
             ],
         ]);
     }
