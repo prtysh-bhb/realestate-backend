@@ -127,6 +127,14 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     Route::post('/properties/{id}/mark-featured', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'markAsFeatured']);
     Route::post('/properties/{id}/remove-featured', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'removeFeatured']);
 
+    // Customer APIs for dropdown/selection
+    Route::get('/customers/all', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getAllCustomers']);
+    Route::get('/customers/my', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getMyCustomers']);
+    Route::get('/customers/{customerId}/appointments', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getCustomerAppointments']);
+    Route::get('/customers/{customerId}/inquiries', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getCustomerInquiries']);
+    Route::get('/customers/{customerId}/properties', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getCustomerProperties']);
+    Route::get('/customers/{customerId}/details', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getCustomerDetails']);
+
     // Reminders
     Route::get('/reminders', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'index']);
     Route::post('/reminders', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'store']);
