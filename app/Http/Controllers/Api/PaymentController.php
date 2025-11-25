@@ -4,16 +4,119 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPlan;
+use App\Models\Payment;
 use App\Services\StripeService;
+use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
     protected $stripeService;
+    protected $invoiceService;
 
-    public function __construct(StripeService $stripeService)
+    public function __construct(StripeService $stripeService, InvoiceService $invoiceService)
     {
         $this->stripeService = $stripeService;
+        $this->invoiceService = $invoiceService;
+    }
+
+
+    /**
+     * Download invoice
+     */
+    public function downloadInvoice($paymentId)
+    {
+        try {
+            $payment = Payment::with(['user', 'subscription.plan'])
+                ->where('user_id', auth()->id())
+                ->findOrFail($paymentId);
+
+            if ($payment->status !== 'succeeded') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice is only available for successful payments',
+                ], 400);
+            }
+
+            $pdf = $this->invoiceService->generateInvoice($payment);
+            $filename = 'invoice_' . str_pad($payment->id, 6, '0', STR_PAD_LEFT) . '.pdf';
+
+            return $pdf->download($filename);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate invoice: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * View invoice (stream in browser)
+     */
+    public function viewInvoice($paymentId)
+    {
+        try {
+            $payment = Payment::with(['user', 'subscription.plan'])
+                ->where('user_id', auth()->id())
+                ->findOrFail($paymentId);
+
+            if ($payment->status !== 'succeeded') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice is only available for successful payments',
+                ], 400);
+            }
+
+            $pdf = $this->invoiceService->generateInvoice($payment);
+
+            return $pdf->stream('invoice_' . str_pad($payment->id, 6, '0', STR_PAD_LEFT) . '.pdf');
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate invoice: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Email invoice to customer
+     */
+    public function emailInvoice($paymentId)
+    {
+        try {
+            $payment = Payment::with(['user', 'subscription.plan'])
+                ->where('user_id', auth()->id())
+                ->findOrFail($paymentId);
+
+            if ($payment->status !== 'succeeded') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice is only available for successful payments',
+                ], 400);
+            }
+
+            $sent = $this->invoiceService->emailInvoice($payment);
+
+            if ($sent) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Invoice sent to your email successfully',
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send invoice email',
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to email invoice: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

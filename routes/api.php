@@ -206,6 +206,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Payment history
     Route::get('/payments/history', [\App\Http\Controllers\Api\PaymentController::class, 'paymentHistory']);
 
+    // Invoice routes
+    Route::get('/payments/{paymentId}/invoice/download', [\App\Http\Controllers\Api\PaymentController::class, 'downloadInvoice']);
+    Route::get('/payments/{paymentId}/invoice/view', [\App\Http\Controllers\Api\PaymentController::class, 'viewInvoice']);
+    Route::post('/payments/{paymentId}/invoice/email', [\App\Http\Controllers\Api\PaymentController::class, 'emailInvoice']);
+
     // / ========== TESTING ENDPOINTS (Backend Only) ==========
     Route::post('/payments/test/create', [\App\Http\Controllers\Api\PaymentController::class, 'testCreateIntent']);
     Route::post('/payments/test/confirm', [\App\Http\Controllers\Api\PaymentController::class, 'testConfirmIntent']);
