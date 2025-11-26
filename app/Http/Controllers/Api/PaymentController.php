@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Services\StripeService;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
+use App\Events\PaymentSuccessEvent;
 
 class PaymentController extends Controller
 {
@@ -218,12 +219,16 @@ class PaymentController extends Controller
                 $request->plan_id
             );
 
+            $payment = $subscription->payments()->latest()->first();
+
+            event(new PaymentSuccessEvent($payment, $subscription->load('plan')));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Payment successful! Subscription activated.',
                 'data' => [
                     'subscription' => $subscription->load('plan'),
-                    'payment' => $subscription->payments()->latest()->first(),
+                    'payment' => $payment,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -362,6 +367,9 @@ class PaymentController extends Controller
                 $plan->id
             );
 
+            $payment = $subscription->payments()->latest()->first();
+            event(new PaymentSuccessEvent($payment, $subscription->load('plan')));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Payment completed and subscription activated!',
@@ -372,7 +380,7 @@ class PaymentController extends Controller
                         'amount' => $paymentIntent->amount / 100,
                     ],
                     'subscription' => $subscription->load('plan'),
-                    'payment' => $subscription->payments()->latest()->first(),
+                    'payment' => $payment,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -420,6 +428,9 @@ class PaymentController extends Controller
                     $user,
                     $request->plan_id
                 );
+
+                $payment = $subscription->payments()->latest()->first();
+                event(new PaymentSuccessEvent($payment, $subscription->load('plan')));
 
                 return response()->json([
                     'success' => true,
@@ -548,6 +559,9 @@ class PaymentController extends Controller
                     $request->plan_id
                 );
 
+                $payment = $subscription->payments()->latest()->first();
+                event(new PaymentSuccessEvent($payment, $subscription->load('plan')));
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Payment confirmed and subscription activated!',
@@ -558,7 +572,7 @@ class PaymentController extends Controller
                             'amount' => $finalIntent->amount / 100,
                         ],
                         'subscription' => $subscription->load('plan'),
-                        'payment' => $subscription->payments()->latest()->first(),
+                        'payment' => $payment,
                     ],
                 ]);
             } else {

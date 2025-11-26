@@ -223,3 +223,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/payments/test/create', [\App\Http\Controllers\Api\PaymentController::class, 'testCreateIntent']);
     Route::post('/payments/test/confirm', [\App\Http\Controllers\Api\PaymentController::class, 'testConfirmIntent']);
 });
+
+// Notifications (for all authenticated users)
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Get notifications
+    Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::get('/notifications/unread', [\App\Http\Controllers\Api\NotificationController::class, 'unread']);
+    Route::get('/notifications/count', [\App\Http\Controllers\Api\NotificationController::class, 'count']);
+    
+    // Mark as read
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    
+    // Delete notifications
+    Route::delete('/notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+    Route::delete('/notifications/delete-all-read', [\App\Http\Controllers\Api\NotificationController::class, 'deleteAllRead']);
+});

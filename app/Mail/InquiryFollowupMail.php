@@ -2,46 +2,28 @@
 
 namespace App\Mail;
 
-use App\Models\Reminder;
-use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
 class InquiryFollowupMail extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public $reminder;
     public $inquiry;
     public $property;
     public $agent;
+    public $customer;
 
-    public function __construct(Reminder $reminder)
+    public function __construct($reminder, $inquiry, $property, $agent, $customer)
     {
         $this->reminder = $reminder;
-        $this->inquiry = $reminder->inquiry;
-        $this->property = $reminder->property;
-        $this->agent = $reminder->agent;
+        $this->inquiry = $inquiry;
+        $this->property = $property;
+        $this->agent = $agent;
+        $this->customer = $customer;
     }
 
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Follow-up on Your Property Inquiry',
-        );
-    }
-
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.reminders.inquiry-followup',
-        );
-    }
-
-    public function attachments(): array
-    {
-        return [];
+        return $this->subject('Follow-up on Your Property Inquiry')
+            ->view('emails.reminders.inquiry-followup');
     }
 }

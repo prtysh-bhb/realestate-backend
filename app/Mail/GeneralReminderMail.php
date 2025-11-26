@@ -2,42 +2,22 @@
 
 namespace App\Mail;
 
-use App\Models\Reminder;
-use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
 
 class GeneralReminderMail extends Mailable
 {
-    use Queueable, SerializesModels;
-
     public $reminder;
     public $agent;
 
-    public function __construct(Reminder $reminder)
+    public function __construct($reminder, $agent)
     {
         $this->reminder = $reminder;
-        $this->agent = $reminder->agent;
+        $this->agent = $agent;
     }
 
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: $this->reminder->title,
-        );
-    }
-
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.reminders.general',
-        );
-    }
-
-    public function attachments(): array
-    {
-        return [];
+        return $this->subject($this->reminder->title ?? 'Reminder')
+            ->view('emails.reminders.general');
     }
 }
