@@ -1,9 +1,15 @@
 <?php
 
+use App\Http\Controllers\Api\Agent\MessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\PasswordResetController;
+
+// For authenticate broadcasting in API
+Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+    return \Illuminate\Support\Facades\Broadcast::auth($request);
+});
 
 // Password Reset routes (public)
 Route::post('/password/email', [PasswordResetController::class, 'sendResetLink']);
@@ -85,9 +91,16 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
 // Agent routes
 Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function () {
+    // Messages
+    Route::get('/messages/unread-counts', [MessageController::class, 'getUnreadMessageCounts']);
+    Route::get('/messages/customers', [MessageController::class, 'getAgentCustomers']);
+    Route::post('/messages/is_typing', [MessageController::class, 'isTyping']);
+    Route::post('/messages/sent', [MessageController::class, 'store']);
+    Route::get('/messages/{userId}', [MessageController::class,'getConversation']);
+    Route::post('/messages/read/{partnerId}', [MessageController::class, 'markAsRead']);
+
     Route::get('/dashboard', [\App\Http\Controllers\Api\Agent\DashboardController::class, 'index']);
     Route::get('/customers', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'index']);
-
     
     // Check property limits
     Route::get('/properties/check-limits', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'checkLimits']);
@@ -173,6 +186,14 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
 Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Api\Customer\DashboardController::class, 'index']);
     
+    // Messages
+    Route::get('/messages/unread-counts', [MessageController::class, 'getUnreadMessageCounts']);
+    Route::post('/messages/is_typing', [MessageController::class, 'isTyping']);
+    Route::post('/messages/sent', [MessageController::class, 'store']);
+    Route::post('/messages/read/{partnerId}', [MessageController::class, 'markAsRead']);
+    Route::get('/messages/agents', [MessageController::class, 'getCustomerAgents']);
+    Route::get('/messages/{userId}', [MessageController::class, 'getConversation']);
+    
     // Favorites
     Route::get('/favorites', [\App\Http\Controllers\Api\Customer\FavoriteController::class, 'index']);
     Route::post('/favorites/{propertyId}', [\App\Http\Controllers\Api\Customer\FavoriteController::class, 'store']);
@@ -196,7 +217,7 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::post('/appointments', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'store']);
     Route::get('/appointments/{id}', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'show']);
     Route::post('/appointments/{id}/cancel', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'cancel']);
-    Route::get('/properties/{propertyId}/availability', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
+    Route::get('/properties/{propertyId}/availability', action: [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
 });
 
 // Public property routes - Use FULL namespace
