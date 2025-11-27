@@ -88,7 +88,7 @@ class CustomerController extends Controller
         $inquiries = Inquiry::with(['property:id,title,address'])
             ->where('agent_id', $agentId)
             ->where('customer_id', $customerId)
-            ->select('id', 'property_id', 'message', 'status', 'created_at')
+            ->select('id', 'customer_name as name', 'property_id', 'message', 'status', 'created_at')
             ->orderBy('created_at', 'desc')
             ->get();
 
