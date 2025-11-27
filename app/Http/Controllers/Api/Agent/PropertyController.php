@@ -77,20 +77,21 @@ class PropertyController extends Controller
 
         // Validate basic fields first
         $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
-            'location' => 'required|string',
-            'address' => 'required|string',
-            'city' => 'required|string',
-            'state' => 'required|string',
-            'zipcode' => 'required|string',
+            'title' => 'required|string|max:100',
+            'description' => 'required|string|min:20',
+            'price' => 'required|numeric|min:0|max:999999999',
+            'location' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'zipcode' => 'required|string|max:20',
             'type' => 'required|in:sale,rent',
-            'property_type' => 'required|string',
-            'bedrooms' => 'required|integer|min:0',
-            'bathrooms' => 'required|integer|min:0',
-            'area' => 'required|numeric|min:0',
+            'property_type' => 'required|string|max:100',
+            'bedrooms' => 'required|integer|min:0|max:20',
+            'bathrooms' => 'required|integer|min:0|max:20',
+            'area' => 'required|numeric|min:0|max:100000',
             'amenities' => 'nullable|array',
+            'amenities.*' => 'string|max:100',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'video' => 'nullable|file|mimes:mp4,mov,avi,wmv|max:51200',
@@ -242,21 +243,22 @@ class PropertyController extends Controller
         }
 
         $request->validate([
-            'title' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'price' => 'sometimes|numeric|min:0',
-            'location' => 'sometimes|string',
-            'address' => 'sometimes|string',
-            'city' => 'sometimes|string',
-            'state' => 'sometimes|string',
-            'zipcode' => 'sometimes|string',
-            'type' => 'sometimes|in:sale,rent',
-            'property_type' => 'sometimes|string',
-            'bedrooms' => 'sometimes|integer|min:0',
-            'bathrooms' => 'sometimes|integer|min:0',
-            'area' => 'sometimes|numeric|min:0',
-            'amenities' => 'nullable|array',
-            'images' => 'nullable|array',
+            'title' => 'required|string|max:100',
+            'description' => 'required|string|min:20',
+            'price' => 'required|numeric|min:0|max:999999999',
+            'location' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'zipcode' => 'required|string|max:20',
+            'type' => 'required|in:sale,rent',
+            'property_type' => 'required|string|max:100',
+            'bedrooms' => 'required|integer|min:0|max:20',
+            'bathrooms' => 'required|integer|min:0|max:20',
+            'area' => 'required|numeric|min:0|max:100000',
+            'amenities' => 'required|array',
+            'amenities.*' => 'string|max:100',
+            'images' => 'nullable|array|max:10',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'video' => 'nullable|file|mimes:mp4,mov,avi,wmv|max:51200',
             'remove_images' => 'nullable|array',
@@ -636,7 +638,7 @@ class PropertyController extends Controller
             ],
         ]);
     }
-
+    
     /**
      * Get subscription status and check if expired
      */

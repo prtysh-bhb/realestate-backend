@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
@@ -31,6 +32,10 @@ class AuthService
     {
         $user = User::where('email', $credentials['email'])->first();
 
+        Log::info('AuthService:34', [
+            'user' => $user,
+            'pass' => Hash::check($credentials['password'], $user->password)
+        ]);
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
