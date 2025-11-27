@@ -35,10 +35,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Subscription Plans - View Available Plans (Agent/Customer can see)
     Route::get('/subscription-plans', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'index']);
     Route::get('/subscription-plans/{id}', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'show']);
-
-    // Subscription Plans - View Available Plans (Agent/Customer can see)
-    Route::get('/subscription-plans', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'index']);
-    Route::get('/subscription-plans/{id}', [\App\Http\Controllers\Api\SubscriptionPlanController::class, 'show']);
 });
 
 // Admin routes
@@ -60,8 +56,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/properties/{id}/approve', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'approve']);
     Route::post('/properties/{id}/reject', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'reject']);
     Route::put('/properties/{id}/status', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'updateStatus']);
-    Route::post('/properties/{id}/feature', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'markFeatured']);
-    Route::post('/properties/{id}/unfeature', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'unmarkFeatured']);
     Route::post('/properties/{id}/feature', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'markFeatured']);
     Route::post('/properties/{id}/unfeature', [\App\Http\Controllers\Api\Admin\PropertyController::class, 'unmarkFeatured']);
 
@@ -211,13 +205,6 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::get('/appointments/{id}', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'show']);
     Route::post('/appointments/{id}/cancel', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'cancel']);
     Route::get('/properties/{propertyId}/availability', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
-
-    // Appointments
-    Route::get('/appointments', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'index']);
-    Route::post('/appointments', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'store']);
-    Route::get('/appointments/{id}', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'show']);
-    Route::post('/appointments/{id}/cancel', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'cancel']);
-    Route::get('/properties/{propertyId}/availability', action: [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
 });
 
 // Public property routes - Use FULL namespace

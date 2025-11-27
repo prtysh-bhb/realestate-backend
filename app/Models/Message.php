@@ -13,7 +13,6 @@ class Message extends Model
         'message',
         'file_url',
         'file_name',
-        'file_type',
         'property_id',
         'meta',
         'is_read',

@@ -16,18 +16,18 @@ return new class extends Migration
             $table->unsignedBigInteger('sender_id');
             $table->unsignedBigInteger('receiver_id');
 
-            // message types: text, image, file, property, system
-            $table->enum('type', ['text', 'image', 'file', 'property', 'system'])
+            // message types: text, image, file, property, video
+            $table->enum('type', ['text', 'image', 'file', 'property', 'video'])
                 ->default('text');
 
             // text message
             $table->text('message')->nullable();
-
-            // image url
-            $table->string('image_url')->nullable();
-
+            
             // file url (pdf, docx, mp4, etc.)
             $table->string('file_url')->nullable();
+
+            // file name
+            $table->string('file_name')->nullable();
 
             // property reference
             $table->unsignedBigInteger('property_id')->nullable();

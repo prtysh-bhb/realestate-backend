@@ -27,7 +27,6 @@ class MessageService
 
             $payload['file_url']  = asset('storage/' . $path);
             $payload['file_name'] = $file->getClientOriginalName();
-            $payload['file_type'] = $file->getMimeType();
         }
 
         // 🔹 Create message

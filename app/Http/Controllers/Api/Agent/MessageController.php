@@ -22,9 +22,9 @@ class MessageController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'receiver_id' => ['required', 'exists:users,id'],
-            'type'        => ['required', 'in:text,image,file,property,system'],
+            'type'        => ['required', 'in:text,image,video,file,property'],
             'message'     => ['nullable', 'string'],
-            'file'        => ['nullable', 'file', 'max:5120'], // 5MB
+            'file'        => ['nullable', 'file', 'max:51200', 'mimes:jpg,jpeg,png,webp,pdf,doc,docx,xlsx,mp4,mov,avi,mkv,webm'],
             'property_id' => ['nullable', 'exists:properties,id'],
             'meta'        => ['nullable', 'array'],
         ]);
