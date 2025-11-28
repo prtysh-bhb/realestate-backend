@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\Property;
+use App\Events\AppointmentScheduledEvent;
 use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
@@ -105,6 +106,9 @@ class AppointmentController extends Controller
                 'location' => $property->address,
                 'status' => 'scheduled',
             ]);
+
+            // Fire event
+            event(new AppointmentScheduledEvent($appointment->load(['customer', 'property'])));
 
             return response()->json([
                 'success' => true,

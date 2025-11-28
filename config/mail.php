@@ -114,5 +114,6 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
-
+    
+    'system_alert_email' => env('SYSTEM_ALERT_EMAIL'),
 ];

@@ -1,9 +1,15 @@
 <?php
 
+use App\Http\Controllers\Api\Agent\MessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\PasswordResetController;
+
+// For authenticate broadcasting in API
+Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+    return \Illuminate\Support\Facades\Broadcast::auth($request);
+});
 
 // Password Reset routes (public)
 Route::post('/password/email', [PasswordResetController::class, 'sendResetLink']);
@@ -14,6 +20,16 @@ Route::post('/password/verify-token', [PasswordResetController::class, 'verifyTo
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-login', [AuthController::class, 'verifyLogin']);
+// Contact Form
+Route::post('/contact-form', [\App\Http\Controllers\Api\ContactFormController::class, 'submit']);
+// Property Valuation
+Route::post('/property-valuation', [\App\Http\Controllers\Api\ValuationController::class, 'calculate']);
+// Loan Calculator
+Route::post('/loan-eligibility', [\App\Http\Controllers\Api\LoanCalculatorController::class, 'calculate']);
+
+Route::middleware('guest:sanctum')->group(function(){
+    Route::get('/restricted-mail-domains', [AuthController::class, 'getRestrictedDomains']);
+});
 
 // Protected routes (any authenticated user)
 Route::middleware('auth:sanctum')->group(function () {
@@ -60,6 +76,9 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/users', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'index']);
     Route::get('/export-users', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'export']);
 
+    // User Details
+    Route::put('/users/{id}/profile', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'updateProfile']);
+
     // Subscription Plans Management (Admin Only)
     Route::get('/subscription-plans', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'index']);
     Route::post('/subscription-plans', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'store']);
@@ -67,12 +86,33 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'update']);
     Route::delete('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'destroy']);
     Route::post('/subscription-plans/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'toggleStatus']);
+
+    // Subscription Plans Management (Admin Only)
+    Route::get('/subscription-plans', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'index']);
+    Route::post('/subscription-plans', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'store']);
+    Route::get('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'show']);
+    Route::put('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'update']);
+    Route::delete('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'destroy']);
+    Route::post('/subscription-plans/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'toggleStatus']);
+
+    Route::post('/inquiries/{id}/assign', [\App\Http\Controllers\Api\Admin\InquiryController::class, 'assignLead']);
 });
 
 // Agent routes
 Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function () {
+    // Messages
+    Route::get('/messages/unread-counts', [MessageController::class, 'getUnreadMessageCounts']);
+    Route::get('/messages/customers', [MessageController::class, 'getAgentCustomers']);
+    Route::post('/messages/is_typing', [MessageController::class, 'isTyping']);
+    Route::post('/messages/sent', [MessageController::class, 'store']);
+    Route::get('/messages/{userId}', [MessageController::class,'getConversation']);
+    Route::post('/messages/read/{partnerId}', [MessageController::class, 'markAsRead']);
+
     Route::get('/dashboard', [\App\Http\Controllers\Api\Agent\DashboardController::class, 'index']);
     Route::get('/customers', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'index']);
+    
+    // Check property limits
+    Route::get('/properties/check-limits', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'checkLimits']);
     
     // Property management
     Route::get('/properties', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'index']);
@@ -81,6 +121,7 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     Route::put('/properties/{id}', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'update']);
     Route::delete('/properties/{id}', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'destroy']);
     Route::delete('/properties/{id}/video', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'deleteVideo']);
+    Route::get('/properties/{id}/analytics', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'analytics']);
     Route::get('/properties/{id}/analytics', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'analytics']);
     
     // Inquiries
@@ -122,11 +163,45 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     // Featured property management
     Route::post('/properties/{id}/mark-featured', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'markAsFeatured']);
     Route::post('/properties/{id}/remove-featured', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'removeFeatured']);
+
+    // Customer APIs for dropdown/selection
+    Route::get('/customers/all', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getAllCustomers']);
+    Route::get('/customers/my', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getMyCustomers']);
+    Route::get('/customers/{customerId}/appointments', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getCustomerAppointments']);
+    Route::get('/customers/{customerId}/inquiries', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getCustomerInquiries']);
+    Route::get('/customers/{customerId}/properties', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getCustomerProperties']);
+    Route::get('/customers/{customerId}/details', [\App\Http\Controllers\Api\Agent\CustomerController::class, 'getCustomerDetails']);
+
+    // Reminders
+    Route::get('/reminders', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'index']);
+    Route::post('/reminders', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'store']);
+    Route::get('/reminders/summary', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'summary']);
+    Route::get('/reminders/{id}', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'show']);
+    Route::put('/reminders/{id}', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'update']);
+    Route::post('/reminders/{id}/complete', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'complete']);
+    Route::post('/reminders/{id}/snooze', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'snooze']);
+    Route::post('/reminders/{id}/cancel', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'cancel']);
+    Route::delete('/reminders/{id}', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'destroy']);
+    
+    // Quick create reminders
+    Route::post('/inquiries/{inquiryId}/create-reminder', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'createFromInquiry']);
+    Route::post('/appointments/{appointmentId}/create-reminder', [\App\Http\Controllers\Api\Agent\ReminderController::class, 'createFromAppointment']);
+
+    // Subscription status check
+    Route::get('/subscription/status', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'checkSubscriptionStatus']);
 });
 
 // Customer routes
 Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Api\Customer\DashboardController::class, 'index']);
+    
+    // Messages
+    Route::get('/messages/unread-counts', [MessageController::class, 'getUnreadMessageCounts']);
+    Route::post('/messages/is_typing', [MessageController::class, 'isTyping']);
+    Route::post('/messages/sent', [MessageController::class, 'store']);
+    Route::post('/messages/read/{partnerId}', [MessageController::class, 'markAsRead']);
+    Route::get('/messages/agents', [MessageController::class, 'getCustomerAgents']);
+    Route::get('/messages/{userId}', [MessageController::class, 'getConversation']);
     
     // Favorites
     Route::get('/favorites', [\App\Http\Controllers\Api\Customer\FavoriteController::class, 'index']);
@@ -184,7 +259,28 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Payment history
     Route::get('/payments/history', [\App\Http\Controllers\Api\PaymentController::class, 'paymentHistory']);
 
+    // Invoice routes
+    Route::get('/payments/{paymentId}/invoice/download', [\App\Http\Controllers\Api\PaymentController::class, 'downloadInvoice']);
+    Route::get('/payments/{paymentId}/invoice/view', [\App\Http\Controllers\Api\PaymentController::class, 'viewInvoice']);
+    Route::post('/payments/{paymentId}/invoice/email', [\App\Http\Controllers\Api\PaymentController::class, 'emailInvoice']);
+
     // / ========== TESTING ENDPOINTS (Backend Only) ==========
     Route::post('/payments/test/create', [\App\Http\Controllers\Api\PaymentController::class, 'testCreateIntent']);
     Route::post('/payments/test/confirm', [\App\Http\Controllers\Api\PaymentController::class, 'testConfirmIntent']);
+});
+
+// Notifications (for all authenticated users)
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Get notifications
+    Route::get('/notifications', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::get('/notifications/unread', [\App\Http\Controllers\Api\NotificationController::class, 'unread']);
+    Route::get('/notifications/count', [\App\Http\Controllers\Api\NotificationController::class, 'count']);
+    
+    // Mark as read
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    
+    // Delete notifications
+    Route::delete('/notifications/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+    Route::delete('/notifications/delete-all-read', [\App\Http\Controllers\Api\NotificationController::class, 'deleteAllRead']);
 });

@@ -189,6 +189,30 @@ class StripeService
         } catch (\Exception $e) {
             throw new \Exception('Payment verification failed: ' . $e->getMessage());
         }
+
+        // Create payment record
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'subscription_id' => $subscription->id,
+            'stripe_payment_intent_id' => $paymentIntent->id,
+            'stripe_charge_id' => $paymentIntent->charges->data[0]->id ?? null,
+            'amount' => $paymentIntent->amount / 100,
+            'currency' => $paymentIntent->currency,
+            'status' => 'succeeded',
+            'description' => "Subscription: {$plan->name}",
+        ]);
+
+        try {
+            $invoiceService = app(InvoiceService::class);
+            $invoiceService->emailInvoice($payment);
+        } catch (\Exception $e) {
+            \Log::error('Failed to auto-send invoice: ' . $e->getMessage());
+        }
+
+        return [
+            'subscription' => $subscription->fresh()->load('plan'),
+            'payment' => $payment,
+        ];
     }
 
     /**

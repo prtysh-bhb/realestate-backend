@@ -16,15 +16,34 @@ class AgentController extends Controller
     }
 
     // List all agents
-    public function index()
+    public function index(Request $request)
     {
-        $agents = $this->userService->getAllAgents();
+        $filters = $request->only('search', 'status');
+        $agents = $this->userService->getAllAgents($filters);
+
+        // Convert items to collection first
+        $agentsData = collect($agents->items())->map(function($agent) {
+            return [
+                'id' => $agent->id,
+                'name' => $agent->name,
+                'email' => $agent->email,
+                'phone' => $agent->phone,
+                'city' => $agent->city,
+                'avatar' => $agent->avatar_url,
+                'company_name' => $agent->company_name,
+                'license_number' => $agent->license_number,
+                'status' => $agent->is_active,
+                'two_factor_enabled' => $agent->two_factor_enabled,
+                'total_properties' => $agent->properties_count,
+                'joined' => $agent->created_at->format('m/d/Y'),
+            ];
+        });
 
         return response()->json([
             'success' => true,
             'message' => 'Agents retrieved successfully',
             'data' => [
-                'agents' => $agents->items(),
+                'agents' => $agentsData,
                 'pagination' => [
                     'total' => $agents->total(),
                     'per_page' => $agents->perPage(),
@@ -45,7 +64,24 @@ class AgentController extends Controller
                 'success' => true,
                 'message' => 'Agent profile retrieved successfully',
                 'data' => [
-                    'agent' => $agent,
+                    'agent' => [
+                        'id' => $agent->id,
+                        'name' => $agent->name,
+                        'email' => $agent->email,
+                        'phone' => $agent->phone,
+                        'city' => $agent->city,
+                        'avatar' => $agent->avatar_url,
+                        'bio' => $agent->bio,
+                        'company_name' => $agent->company_name,
+                        'license_number' => $agent->license_number,
+                        'address' => $agent->address,
+                        'state' => $agent->state,
+                        'zipcode' => $agent->zipcode,
+                        'status' => $agent->is_active ? 'Active' : 'Inactive',
+                        'two_factor_enabled' => $agent->two_factor_enabled,
+                        'total_properties' => $agent->properties_count,
+                        'joined' => $agent->created_at->format('m/d/Y'),
+                    ],
                 ],
             ]);
         } catch (\Exception $e) {

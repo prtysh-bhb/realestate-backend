@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\AdminPropertyService;
 use Illuminate\Http\Request;
+use App\Events\PropertyApprovedEvent;
+use App\Events\PropertyRejectedEvent;  
 
 class PropertyController extends Controller
 {
@@ -71,6 +73,7 @@ class PropertyController extends Controller
     {
         try {
             $property = $this->propertyService->approveProperty($id, $request->user()->id);
+            event(new PropertyApprovedEvent($property->load('agent')));
             
             // Add is_favorite flag
             $property->is_favorite = false;
@@ -103,6 +106,8 @@ class PropertyController extends Controller
                 $request->reason,
                 $request->user()->id
             );
+            //Fire notification event
+            event(new PropertyRejectedEvent($property->load('agent'), $request->reason));
             
             // Add is_favorite flag
             $property->is_favorite = false;

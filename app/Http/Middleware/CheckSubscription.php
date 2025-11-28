@@ -19,20 +19,28 @@ class CheckSubscription
         // Get active subscription
         $subscription = $user->activeSubscription()->with('plan')->first();
 
-        // Allow if no subscription required (you can change this logic)
+        // Check if subscription exists
         if (!$subscription) {
             return response()->json([
                 'success' => false,
                 'message' => 'You need an active subscription to perform this action',
+                'subscription_status' => 'no_subscription',
                 'redirect' => 'subscription-plans',
             ], 403);
         }
 
-        // Check if subscription is expired
-        if ($subscription->isExpired()) {
+        // Check if subscription is expired (real-time check)
+        if ($subscription->ends_at && $subscription->ends_at->isPast()) {
+            // Update status to expired if not already
+            if ($subscription->status === 'active') {
+                $subscription->update(['status' => 'expired']);
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Your subscription has expired. Please renew to continue.',
+                'subscription_status' => 'expired',
+                'expired_at' => $subscription->ends_at,
                 'redirect' => 'subscription-plans',
             ], 403);
         }

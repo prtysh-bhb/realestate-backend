@@ -17,6 +17,7 @@ class User extends Authenticatable
         'password',
         'role',
         'phone',
+        'location', 
         'avatar',
         'bio',
         'company_name',
@@ -85,7 +86,7 @@ class User extends Authenticatable
 
     public function inquiries()
     {
-        return $this->hasMany(Inquiry::class);
+        return $this->hasMany(Inquiry::class, 'customer_id');
     }
 
     public function subscriptions()
@@ -114,5 +115,10 @@ class User extends Authenticatable
     public function customerAppointments()
     {
         return $this->hasMany(Appointment::class, 'customer_id');
+    }
+
+    public function reminders()
+    {
+        return $this->hasMany(Reminder::class, 'agent_id');
     }
 }

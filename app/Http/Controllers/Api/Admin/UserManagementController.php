@@ -219,4 +219,39 @@ class UserManagementController extends Controller
 
         return Excel::download(new UsersExport($role, $isActive), $filename);
     }
+
+    /**
+     * Update Profile (with avatar upload)
+     */
+    public function updateProfile(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'phone' => 'sometimes|string|max:20',
+            'location' => 'sometimes|string|max:255',
+            'bio' => 'sometimes|string|max:1000',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if exists
+            if ($user->avatar) {
+                \Storage::disk('public')->delete($user->avatar);
+            }
+            
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $validated['avatar'] = $path;
+        }
+
+        $user->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully',
+            'data' => $user->fresh(),
+        ]);
+    }
 }
