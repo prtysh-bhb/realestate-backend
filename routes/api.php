@@ -77,8 +77,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/export-users', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'export']);
 
     // User Details
-    Route::get('/agents/{id}', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'showAgent']);
-    Route::get('/customers/{id}', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'showCustomer']);
     Route::put('/users/{id}/profile', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'updateProfile']);
 
     // Subscription Plans Management (Admin Only)

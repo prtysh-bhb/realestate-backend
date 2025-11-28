@@ -6,21 +6,33 @@ use App\Models\User;
 
 class UserService
 {
-    public function getAllAgents()
+    public function getAllAgents($filters)
     {
         return User::where('role', 'agent')
             ->withCount('properties')
             ->select('id', 'name', 'email', 'phone', 'city', 'avatar', 'company_name', 
                      'license_number', 'is_active', 'two_factor_enabled', 'created_at')
+            ->when(isset($filters['search']), function($q) use($filters){
+                $q->where('name', 'like', '%'.$filters['search'].'%');
+            })
+            ->when(isset($filters['status']), function($q) use($filters){
+                $q->where('is_active', $filters['status']);
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
     }
 
-    public function getAllCustomers()
+    public function getAllCustomers($filters)
     {
         return User::where('role', 'customer')
             ->select('id', 'name', 'email', 'phone', 'city', 'avatar', 
                      'is_active', 'two_factor_enabled', 'created_at')
+            ->when(isset($filters['search']), function($q) use($filters){
+                $q->where('name', 'like', '%'.$filters['search'].'%');
+            })
+            ->when(isset($filters['status']), function($q) use($filters){
+                $q->where('is_active', $filters['status']);
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
     }
@@ -30,9 +42,6 @@ class UserService
         $agent = User::where('role', 'agent')
             ->where('id', $id)
             ->withCount('properties')
-            ->select('id', 'name', 'email', 'phone', 'city', 'avatar', 'bio', 
-                     'company_name', 'license_number', 'address', 'state', 
-                     'zipcode', 'is_active', 'two_factor_enabled', 'created_at', 'updated_at')
             ->first();
 
         if (!$agent) {
@@ -47,10 +56,8 @@ class UserService
         $customer = User::where('role', 'customer')
             ->where('id', $id)
             ->withCount(['inquiries', 'favorites'])
-            ->select('id', 'name', 'email', 'phone', 'city', 'avatar', 'bio', 
-                     'address', 'state', 'zipcode', 'is_active', 
-                     'two_factor_enabled', 'created_at', 'updated_at')
             ->first();
+            info($customer->toArray());
 
         if (!$customer) {
             throw new \Exception('Customer not found');

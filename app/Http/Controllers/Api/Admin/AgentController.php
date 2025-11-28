@@ -16,9 +16,10 @@ class AgentController extends Controller
     }
 
     // List all agents
-    public function index()
+    public function index(Request $request)
     {
-        $agents = $this->userService->getAllAgents();
+        $filters = $request->only('search', 'status');
+        $agents = $this->userService->getAllAgents($filters);
 
         // Convert items to collection first
         $agentsData = collect($agents->items())->map(function($agent) {
@@ -31,7 +32,7 @@ class AgentController extends Controller
                 'avatar' => $agent->avatar_url,
                 'company_name' => $agent->company_name,
                 'license_number' => $agent->license_number,
-                'status' => $agent->is_active ? 'Active' : 'Inactive',
+                'status' => $agent->is_active,
                 'two_factor_enabled' => $agent->two_factor_enabled,
                 'total_properties' => $agent->properties_count,
                 'joined' => $agent->created_at->format('m/d/Y'),

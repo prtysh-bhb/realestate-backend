@@ -16,9 +16,11 @@ class CustomerController extends Controller
     }
 
     // List all customers
-    public function index()
+    public function index(Request $request)
     {
-        $customers = $this->userService->getAllCustomers();
+        $filters = $request->only('search', 'status');
+
+        $customers = $this->userService->getAllCustomers($filters);
 
         // Convert items to collection first
         $customersData = collect($customers->items())->map(function($customer) {
@@ -29,7 +31,7 @@ class CustomerController extends Controller
                 'phone' => $customer->phone,
                 'city' => $customer->city,
                 'avatar' => $customer->avatar_url,
-                'status' => $customer->is_active ? 'Active' : 'Inactive',
+                'status' => $customer->is_active,
                 'two_factor_enabled' => $customer->two_factor_enabled,
                 'total_inquiries' => $customer->inquiries_count,
                 'total_favorites' => $customer->favorites_count,
@@ -57,7 +59,7 @@ class CustomerController extends Controller
     {
         try {
             $customer = $this->userService->getCustomerById($id);
-
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Customer profile retrieved successfully',
@@ -73,7 +75,7 @@ class CustomerController extends Controller
                         'address' => $customer->address,
                         'state' => $customer->state,
                         'zipcode' => $customer->zipcode,
-                        'status' => $customer->is_active ? 'Active' : 'Inactive',
+                        'status' => $customer->is_active,
                         'two_factor_enabled' => $customer->two_factor_enabled,
                         'total_inquiries' => $customer->inquiries_count,
                         'total_favorites' => $customer->favorites_count,
