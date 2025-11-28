@@ -20,25 +20,28 @@ class AgentController extends Controller
     {
         $agents = $this->userService->getAllAgents();
 
+        // Convert items to collection first
+        $agentsData = collect($agents->items())->map(function($agent) {
+            return [
+                'id' => $agent->id,
+                'name' => $agent->name,
+                'email' => $agent->email,
+                'phone' => $agent->phone,
+                'city' => $agent->city,
+                'avatar' => $agent->avatar_url,
+                'company_name' => $agent->company_name,
+                'license_number' => $agent->license_number,
+                'status' => $agent->is_active ? 'Active' : 'Inactive',
+                'total_properties' => $agent->properties_count,
+                'joined' => $agent->created_at->format('m/d/Y'),
+            ];
+        });
+
         return response()->json([
             'success' => true,
             'message' => 'Agents retrieved successfully',
             'data' => [
-                'agents' => $agents->items()->map(function($agent) {
-                    return [
-                        'id' => $agent->id,
-                        'name' => $agent->name,
-                        'email' => $agent->email,
-                        'phone' => $agent->phone,
-                        'city' => $agent->city,
-                        'avatar' => $agent->avatar_url,
-                        'company_name' => $agent->company_name,
-                        'license_number' => $agent->license_number,
-                        'status' => $agent->is_active ? 'Active' : 'Inactive',
-                        'total_properties' => $agent->properties_count,
-                        'joined' => $agent->created_at->format('m/d/Y'),
-                    ];
-                }),
+                'agents' => $agentsData,
                 'pagination' => [
                     'total' => $agents->total(),
                     'per_page' => $agents->perPage(),

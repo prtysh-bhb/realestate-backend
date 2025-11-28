@@ -20,24 +20,27 @@ class CustomerController extends Controller
     {
         $customers = $this->userService->getAllCustomers();
 
+        // Convert items to collection first
+        $customersData = collect($customers->items())->map(function($customer) {
+            return [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'email' => $customer->email,
+                'phone' => $customer->phone,
+                'city' => $customer->city,
+                'avatar' => $customer->avatar_url,
+                'status' => $customer->is_active ? 'Active' : 'Inactive',
+                'total_inquiries' => $customer->inquiries_count,
+                'total_favorites' => $customer->favorites_count,
+                'joined' => $customer->created_at->format('m/d/Y'),
+            ];
+        });
+
         return response()->json([
             'success' => true,
             'message' => 'Customers retrieved successfully',
             'data' => [
-                'customers' => $customers->items()->map(function($customer) {
-                    return [
-                        'id' => $customer->id,
-                        'name' => $customer->name,
-                        'email' => $customer->email,
-                        'phone' => $customer->phone,
-                        'city' => $customer->city,
-                        'avatar' => $customer->avatar_url,
-                        'status' => $customer->is_active ? 'Active' : 'Inactive',
-                        'total_inquiries' => $customer->inquiries_count,
-                        'total_favorites' => $customer->favorites_count,
-                        'joined' => $customer->created_at->format('m/d/Y'),
-                    ];
-                }),
+                'customers' => $customersData,
                 'pagination' => [
                     'total' => $customers->total(),
                     'per_page' => $customers->perPage(),
