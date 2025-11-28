@@ -219,4 +219,104 @@ class UserManagementController extends Controller
 
         return Excel::download(new UsersExport($role, $isActive), $filename);
     }
+
+    /**
+     * Show Agent Details
+     */
+    public function showAgent($id)
+    {
+        $agent = User::where('id', $id)
+            ->where('role', 'agent')
+            ->withCount('properties')
+            ->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $agent->id,
+                'name' => $agent->name,
+                'email' => $agent->email,
+                'phone' => $agent->phone,
+                'location' => $agent->location,
+                'avatar' => $agent->avatar_url,
+                'bio' => $agent->bio,
+                'company_name' => $agent->company_name,
+                'license_number' => $agent->license_number,
+                'address' => $agent->address,
+                'city' => $agent->city,
+                'state' => $agent->state,
+                'zipcode' => $agent->zipcode,
+                'status' => $agent->is_active ? 'Active' : 'Inactive',
+                'total_properties' => $agent->properties_count,
+                'joined' => $agent->created_at->format('m/d/Y'),
+            ],
+        ]);
+    }
+
+    /**
+     * Show Customer Details
+     */
+    public function showCustomer($id)
+    {
+        $customer = User::where('id', $id)
+            ->where('role', 'customer')
+            ->withCount(['inquiries', 'favorites'])
+            ->firstOrFail();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'email' => $customer->email,
+                'phone' => $customer->phone,
+                'location' => $customer->location,
+                'avatar' => $customer->avatar_url,
+                'bio' => $customer->bio,
+                'address' => $customer->address,
+                'city' => $customer->city,
+                'state' => $customer->state,
+                'zipcode' => $customer->zipcode,
+                'status' => $customer->is_active ? 'Active' : 'Inactive',
+                'total_inquiries' => $customer->inquiries_count,
+                'total_favorites' => $customer->favorites_count,
+                'joined' => $customer->created_at->format('m/d/Y'),
+            ],
+        ]);
+    }
+
+    /**
+     * Update Profile (with avatar upload)
+     */
+    public function updateProfile(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'phone' => 'sometimes|string|max:20',
+            'location' => 'sometimes|string|max:255',
+            'bio' => 'sometimes|string|max:1000',
+            'avatar' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        // Handle avatar upload
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar if exists
+            if ($user->avatar) {
+                \Storage::disk('public')->delete($user->avatar);
+            }
+            
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $validated['avatar'] = $path;
+        }
+
+        $user->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile updated successfully',
+            'data' => $user->fresh(),
+        ]);
+    }
 }

@@ -20,6 +20,12 @@ Route::post('/password/verify-token', [PasswordResetController::class, 'verifyTo
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-login', [AuthController::class, 'verifyLogin']);
+// Contact Form
+Route::post('/contact-form', [\App\Http\Controllers\Api\ContactFormController::class, 'submit']);
+// Property Valuation
+Route::post('/property-valuation', [\App\Http\Controllers\Api\ValuationController::class, 'calculate']);
+// Loan Calculator
+Route::post('/loan-eligibility', [\App\Http\Controllers\Api\LoanCalculatorController::class, 'calculate']);
 
 // Protected routes (any authenticated user)
 Route::middleware('auth:sanctum')->group(function () {
@@ -66,6 +72,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/users', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'index']);
     Route::get('/export-users', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'export']);
 
+    // User Details
+    Route::get('/agents/{id}', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'showAgent']);
+    Route::get('/customers/{id}', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'showCustomer']);
+    Route::put('/users/{id}/profile', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'updateProfile']);
+
     // Subscription Plans Management (Admin Only)
     Route::get('/subscription-plans', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'index']);
     Route::post('/subscription-plans', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'store']);
@@ -81,6 +92,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'update']);
     Route::delete('/subscription-plans/{id}', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'destroy']);
     Route::post('/subscription-plans/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'toggleStatus']);
+
+    Route::post('/inquiries/{id}/assign', [\App\Http\Controllers\Api\Admin\InquiryController::class, 'assignLead']);
 });
 
 // Agent routes

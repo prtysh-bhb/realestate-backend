@@ -4,12 +4,13 @@ namespace App\Services;
 
 use App\Models\Inquiry;
 use App\Models\Property;
+use App\Mail\PropertyInquiryConfirmationMail;
+use Illuminate\Support\Facades\Mail;
 
 class InquiryService
 {
     public function createInquiry($customerId, $propertyId, $data)
     {
-        // Check if property exists and is published
         $property = Property::where('id', $propertyId)
             ->where('status', 'published')
             ->where('approval_status', 'approved')
@@ -19,7 +20,7 @@ class InquiryService
             throw new \Exception('Property not found or not available');
         }
 
-        return Inquiry::create([
+        $inquiry = Inquiry::create([
             'customer_id' => $customerId,
             'property_id' => $propertyId,
             'agent_id' => $property->agent_id,
@@ -30,6 +31,10 @@ class InquiryService
             'status' => 'new',
             'stage' => 'new',
         ]);
+
+        Mail::to($data['email'])->send(new PropertyInquiryConfirmationMail($inquiry->load('property', 'agent')));
+
+        return $inquiry;
     }
 
     public function getCustomerInquiries($customerId)
