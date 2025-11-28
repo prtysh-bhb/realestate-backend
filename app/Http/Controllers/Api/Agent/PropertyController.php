@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api\Agent;
 use App\Http\Controllers\Controller;
 use App\Models\Property; 
 use App\Services\PropertyService;
+use App\Models\User;
+use App\Mail\PropertySubmittedForApprovalMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
 class PropertyController extends Controller
 {
@@ -174,6 +177,11 @@ class PropertyController extends Controller
             }
 
             $property = Property::create($data);
+
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->send(new PropertySubmittedForApprovalMail($property->load('agent')));
+            }
 
             return response()->json([
                 'success' => true,

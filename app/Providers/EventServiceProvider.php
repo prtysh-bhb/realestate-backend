@@ -22,6 +22,12 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\PaymentSuccessEvent::class => [
             \App\Listeners\SendPaymentSuccessNotification::class,
         ],
+        \App\Events\LeadAssignedEvent::class => [
+            \App\Listeners\SendLeadAssignedNotification::class,
+        ],
+        \App\Events\PropertyStatusChangedEvent::class => [
+            \App\Listeners\SendPropertyStatusUpdateNotification::class,
+        ],
     ];
 
     public function boot(): void

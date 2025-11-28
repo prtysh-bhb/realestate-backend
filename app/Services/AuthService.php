@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Mail\WelcomeMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -20,6 +22,8 @@ class AuthService
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
+        // Send welcome email
+        Mail::to($user->email)->send(new WelcomeMail($user));
 
         return [
             'user' => $user,
