@@ -9,7 +9,9 @@ class UserService
     public function getAllAgents()
     {
         return User::where('role', 'agent')
-            ->select('id', 'name', 'email', 'is_active', 'two_factor_enabled', 'created_at')
+            ->withCount('properties')
+            ->select('id', 'name', 'email', 'phone', 'location', 'avatar', 'company_name', 
+                     'license_number', 'is_active', 'two_factor_enabled', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
     }
@@ -17,7 +19,9 @@ class UserService
     public function getAllCustomers()
     {
         return User::where('role', 'customer')
-            ->select('id', 'name', 'email', 'is_active', 'two_factor_enabled', 'created_at')
+            ->withCount(['inquiries', 'favorites'])
+            ->select('id', 'name', 'email', 'phone', 'location', 'avatar', 
+                     'is_active', 'two_factor_enabled', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
     }
@@ -26,7 +30,10 @@ class UserService
     {
         $agent = User::where('role', 'agent')
             ->where('id', $id)
-            ->select('id', 'name', 'email', 'is_active', 'two_factor_enabled', 'created_at', 'updated_at')
+            ->withCount('properties')
+            ->select('id', 'name', 'email', 'phone', 'location', 'avatar', 'bio', 
+                     'company_name', 'license_number', 'address', 'city', 'state', 
+                     'zipcode', 'is_active', 'two_factor_enabled', 'created_at', 'updated_at')
             ->first();
 
         if (!$agent) {
@@ -40,7 +47,10 @@ class UserService
     {
         $customer = User::where('role', 'customer')
             ->where('id', $id)
-            ->select('id', 'name', 'email', 'is_active', 'two_factor_enabled', 'created_at', 'updated_at')
+            ->withCount(['inquiries', 'favorites'])
+            ->select('id', 'name', 'email', 'phone', 'location', 'avatar', 'bio', 
+                     'address', 'city', 'state', 'zipcode', 'is_active', 
+                     'two_factor_enabled', 'created_at', 'updated_at')
             ->first();
 
         if (!$customer) {
