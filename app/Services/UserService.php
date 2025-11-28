@@ -9,7 +9,6 @@ class UserService
     public function getAllAgents()
     {
         return User::where('role', 'agent')
-            ->withCount('properties')
             ->select('id', 'name', 'email', 'phone', 'location', 'avatar', 'company_name', 
                      'license_number', 'is_active', 'two_factor_enabled', 'created_at')
             ->orderBy('created_at', 'desc')
@@ -19,7 +18,6 @@ class UserService
     public function getAllCustomers()
     {
         return User::where('role', 'customer')
-            ->withCount(['inquiries', 'favorites'])
             ->select('id', 'name', 'email', 'phone', 'location', 'avatar', 
                      'is_active', 'two_factor_enabled', 'created_at')
             ->orderBy('created_at', 'desc')
@@ -47,7 +45,6 @@ class UserService
     {
         $customer = User::where('role', 'customer')
             ->where('id', $id)
-            ->withCount(['inquiries', 'favorites'])
             ->select('id', 'name', 'email', 'phone', 'location', 'avatar', 'bio', 
                      'address', 'city', 'state', 'zipcode', 'is_active', 
                      'two_factor_enabled', 'created_at', 'updated_at')

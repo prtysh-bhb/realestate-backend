@@ -23,8 +23,11 @@ class AuthService
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
+        
         // Send welcome email
-        Mail::to($user->email)->send(new WelcomeMail($user));
+        if(env('APP_ENV') == 'production'){
+            Mail::to($user->email)->send(new WelcomeMail($user));
+        }
 
         return [
             'user' => $user,

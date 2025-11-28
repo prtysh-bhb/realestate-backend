@@ -86,7 +86,7 @@ class User extends Authenticatable
 
     public function inquiries()
     {
-        return $this->hasMany(Inquiry::class);
+        return $this->hasMany(Inquiry::class, 'customer_id');
     }
 
     public function subscriptions()
