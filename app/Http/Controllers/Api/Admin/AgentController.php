@@ -32,6 +32,7 @@ class AgentController extends Controller
                 'company_name' => $agent->company_name,
                 'license_number' => $agent->license_number,
                 'status' => $agent->is_active ? 'Active' : 'Inactive',
+                'two_factor_enabled' => $agent->two_factor_enabled,
                 'total_properties' => $agent->properties_count,
                 'joined' => $agent->created_at->format('m/d/Y'),
             ];
@@ -76,6 +77,7 @@ class AgentController extends Controller
                         'state' => $agent->state,
                         'zipcode' => $agent->zipcode,
                         'status' => $agent->is_active ? 'Active' : 'Inactive',
+                        'two_factor_enabled' => $agent->two_factor_enabled,
                         'total_properties' => $agent->properties_count,
                         'joined' => $agent->created_at->format('m/d/Y'),
                     ],
