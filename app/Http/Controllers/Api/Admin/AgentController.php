@@ -24,7 +24,21 @@ class AgentController extends Controller
             'success' => true,
             'message' => 'Agents retrieved successfully',
             'data' => [
-                'agents' => $agents->items(),
+                'agents' => $agents->items()->map(function($agent) {
+                    return [
+                        'id' => $agent->id,
+                        'name' => $agent->name,
+                        'email' => $agent->email,
+                        'phone' => $agent->phone,
+                        'location' => $agent->location,
+                        'avatar' => $agent->avatar_url,
+                        'company_name' => $agent->company_name,
+                        'license_number' => $agent->license_number,
+                        'status' => $agent->is_active ? 'Active' : 'Inactive',
+                        'total_properties' => $agent->properties_count,
+                        'joined' => $agent->created_at->format('m/d/Y'),
+                    ];
+                }),
                 'pagination' => [
                     'total' => $agents->total(),
                     'per_page' => $agents->perPage(),
@@ -45,7 +59,24 @@ class AgentController extends Controller
                 'success' => true,
                 'message' => 'Agent profile retrieved successfully',
                 'data' => [
-                    'agent' => $agent,
+                    'agent' => [
+                        'id' => $agent->id,
+                        'name' => $agent->name,
+                        'email' => $agent->email,
+                        'phone' => $agent->phone,
+                        'location' => $agent->location,
+                        'avatar' => $agent->avatar_url,
+                        'bio' => $agent->bio,
+                        'company_name' => $agent->company_name,
+                        'license_number' => $agent->license_number,
+                        'address' => $agent->address,
+                        'city' => $agent->city,
+                        'state' => $agent->state,
+                        'zipcode' => $agent->zipcode,
+                        'status' => $agent->is_active ? 'Active' : 'Inactive',
+                        'total_properties' => $agent->properties_count,
+                        'joined' => $agent->created_at->format('m/d/Y'),
+                    ],
                 ],
             ]);
         } catch (\Exception $e) {
