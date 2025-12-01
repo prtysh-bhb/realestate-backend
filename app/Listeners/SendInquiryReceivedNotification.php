@@ -31,7 +31,7 @@ class SendInquiryReceivedNotification
                 'inquiry_message' => $inquiry->message,
                 'created_at' => $inquiry->created_at->format('M d, Y H:i'),
                 'message' => "New inquiry from {$inquiry->customer->name}",
-                'action_url' => "/agent/inquiries/{$inquiry->id}",
+                'action_url' => "/agent/leads/{$inquiry->id}",
             ],
             sendEmail: true,
             mailClass: \App\Mail\InquiryReceivedMail::class

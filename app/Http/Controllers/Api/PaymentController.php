@@ -546,7 +546,7 @@ class PaymentController extends Controller
             $paymentIntent = \Stripe\PaymentIntent::retrieve($request->payment_intent_id);
 
             // Step 2: Confirm the payment intent
-            $confirmed = $paymentIntent->confirm();
+            // $confirmed = $paymentIntent->confirm();
 
             // Step 3: Retrieve updated status
             $finalIntent = \Stripe\PaymentIntent::retrieve($request->payment_intent_id);

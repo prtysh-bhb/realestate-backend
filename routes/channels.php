@@ -13,3 +13,7 @@ Broadcast::channel('send-message.{userId}', function ($user, $userId) {
 Broadcast::channel('is-typing.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
+
+Broadcast::channel('notified.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

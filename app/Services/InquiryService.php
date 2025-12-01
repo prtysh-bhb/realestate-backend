@@ -32,7 +32,9 @@ class InquiryService
             'stage' => 'new',
         ]);
 
-        Mail::to($data['email'])->send(new PropertyInquiryConfirmationMail($inquiry->load('property', 'agent')));
+        if(env('APP_ENV') == 'production'){
+            Mail::to($data['email'])->send(new PropertyInquiryConfirmationMail($inquiry->load('property', 'agent')));
+        }
 
         return $inquiry;
     }
