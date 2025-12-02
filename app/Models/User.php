@@ -30,6 +30,8 @@ class User extends Authenticatable
         'is_active',
         'deactivation_reason',
         'deactivated_at',
+        'provider',
+        'provider_id',
     ];
 
     protected $hidden = [

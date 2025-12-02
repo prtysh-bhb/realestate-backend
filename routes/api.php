@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\SocialAuthController; 
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\PasswordResetController;
 
@@ -14,6 +15,11 @@ Route::post('/password/verify-token', [PasswordResetController::class, 'verifyTo
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-login', [AuthController::class, 'verifyLogin']);
+
+// Social Login
+Route::get('/auth/{provider}', [SocialAuthController::class, 'redirectToProvider']);
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback']);
+
 // Contact Form
 Route::post('/contact-form', [\App\Http\Controllers\Api\ContactFormController::class, 'submit']);
 // Property Valuation
