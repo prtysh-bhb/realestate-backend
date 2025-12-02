@@ -17,6 +17,7 @@ class User extends Authenticatable
         'password',
         'role',
         'phone',
+        'location', 
         'avatar',
         'bio',
         'company_name',
@@ -28,6 +29,8 @@ class User extends Authenticatable
         'is_active',
         'deactivation_reason',
         'deactivated_at',
+        'provider',
+        'provider_id',
     ];
 
     protected $hidden = [
@@ -128,5 +131,38 @@ class User extends Authenticatable
     public function agentReviewsGiven()
     {
         return $this->hasMany(AgentReview::class, 'user_id');
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    public function activeSubscription()
+    {
+        return $this->hasOne(UserSubscription::class)
+            ->where('status', 'active')
+            ->where('ends_at', '>', now())
+            ->latest();
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function agentAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'agent_id');
+    }
+
+    public function customerAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'customer_id');
+    }
+
+    public function reminders()
+    {
+        return $this->hasMany(Reminder::class, 'agent_id');
     }
 }
