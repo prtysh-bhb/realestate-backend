@@ -180,8 +180,11 @@ class PropertyController extends Controller
             $property = Property::create($data);
 
             $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                Mail::to($admin->email)->send(new PropertySubmittedForApprovalMail($property->load('agent')));
+
+            if(env('APP_ENV') == 'production'){
+                foreach ($admins as $admin) {
+                    Mail::to($admin->email)->send(new PropertySubmittedForApprovalMail($property->load('agent')));
+                }
             }
 
             return response()->json([
