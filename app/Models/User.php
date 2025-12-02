@@ -17,6 +17,7 @@ class User extends Authenticatable
         'password',
         'role',
         'phone',
+        'location', 
         'avatar',
         'bio',
         'company_name',
@@ -28,6 +29,8 @@ class User extends Authenticatable
         'is_active',
         'deactivation_reason',
         'deactivated_at',
+        'provider',
+        'provider_id',
     ];
 
     protected $hidden = [
@@ -118,5 +121,15 @@ class User extends Authenticatable
     public function reminders()
     {
         return $this->hasMany(Reminder::class, 'agent_id');
+    }
+
+    public function agentReviewsReceived()
+    {
+        return $this->hasMany(AgentReview::class, 'agent_id');
+    }
+
+    public function agentReviewsGiven()
+    {
+        return $this->hasMany(AgentReview::class, 'user_id');
     }
 }
