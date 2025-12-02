@@ -39,23 +39,6 @@ class AgentController extends Controller
             ];
         });
 
-        // Convert items to collection first
-        $agentsData = collect($agents->items())->map(function($agent) {
-            return [
-                'id' => $agent->id,
-                'name' => $agent->name,
-                'email' => $agent->email,
-                'phone' => $agent->phone,
-                'city' => $agent->city,
-                'avatar' => $agent->avatar_url,
-                'company_name' => $agent->company_name,
-                'license_number' => $agent->license_number,
-                'status' => $agent->is_active ? 'Active' : 'Inactive',
-                'total_properties' => $agent->properties_count,
-                'joined' => $agent->created_at->format('m/d/Y'),
-            ];
-        });
-
         return response()->json([
             'success' => true,
             'message' => 'Agents retrieved successfully',

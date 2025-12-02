@@ -48,17 +48,6 @@ Route::middleware('guest:sanctum')->group(function(){
     Route::get('/restricted-mail-domains', [AuthController::class, 'getRestrictedDomains']);
 });
 
-// Social Login
-Route::get('/auth/{provider}', [SocialAuthController::class, 'redirectToProvider']);
-Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback']);
-
-// Contact Form
-Route::post('/contact-form', [\App\Http\Controllers\Api\ContactFormController::class, 'submit']);
-// Property Valuation
-Route::post('/property-valuation', [\App\Http\Controllers\Api\ValuationController::class, 'calculate']);
-// Loan Calculator
-Route::post('/loan-eligibility', [\App\Http\Controllers\Api\LoanCalculatorController::class, 'calculate']);
-
 // Protected routes (any authenticated user)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

@@ -25,7 +25,6 @@ class UserService
     public function getAllCustomers($filters)
     {
         return User::where('role', 'customer')
-            ->withCount(['inquiries', 'favorites'])
             ->select('id', 'name', 'email', 'phone', 'city', 'avatar', 
                      'is_active', 'two_factor_enabled', 'created_at')
             ->when(isset($filters['search']), function($q) use($filters){
@@ -43,9 +42,6 @@ class UserService
         $agent = User::where('role', 'agent')
             ->where('id', $id)
             ->withCount('properties')
-            ->select('id', 'name', 'email', 'phone', 'city', 'avatar', 'bio', 
-                     'company_name', 'license_number', 'address', 'state', 
-                     'zipcode', 'is_active', 'two_factor_enabled', 'created_at', 'updated_at')
             ->first();
 
         if (!$agent) {
@@ -60,9 +56,6 @@ class UserService
         $customer = User::where('role', 'customer')
             ->where('id', $id)
             ->withCount(['inquiries', 'favorites'])
-            ->select('id', 'name', 'email', 'phone', 'city', 'avatar', 'bio', 
-                     'address', 'state', 'zipcode', 'is_active', 
-                     'two_factor_enabled', 'created_at', 'updated_at')
             ->first();
             info($customer->toArray());
 
