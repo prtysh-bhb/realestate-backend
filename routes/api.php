@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\BlogController;
+use App\Http\Controllers\Api\Admin\FAQController;
+use App\Http\Controllers\Api\Admin\NewsController;
 use App\Http\Controllers\Api\Agent\MessageController;
 use App\Http\Controllers\Api\Customer\AgentReviewController;
 use App\Http\Controllers\Api\Customer\PropertyReviewController;
@@ -98,6 +101,20 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/subscription-plans/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'toggleStatus']);
 
     Route::post('/inquiries/{id}/assign', [\App\Http\Controllers\Api\Admin\InquiryController::class, 'assignLead']);
+
+    // CMS Management
+
+    // faqs
+    Route::post('/faqs/update-status/{id}', [FAQController::class, 'updateStatus']);
+    Route::apiResource('/faqs', FAQController::class);
+
+    // blogs
+    Route::post('/blogs/update-status/{id}', [BlogController::class, 'updateStatus']);
+    Route::apiResource('/blogs', BlogController::class);
+
+    // news
+    Route::post('/news/update-status/{id}', [NewsController::class, 'updateStatus']);
+    Route::apiResource('/news', NewsController::class);
 });
 
 // Agent routes
