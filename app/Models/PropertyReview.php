@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Review extends Model
+class PropertyReview extends Model
 {
+    protected $table = 'property_reviews';
+
     protected $fillable = [
         'property_id',
         'user_id',
@@ -16,7 +18,8 @@ class Review extends Model
         'green_area',
         'locality',
         'positive_comment',
-        'negative_comment'
+        'negative_comment',
+        'is_visible'
     ];
 
     public function property()

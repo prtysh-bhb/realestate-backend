@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rating_stats', function (Blueprint $table) {
+        Schema::create('property_rating_stats', function (Blueprint $table) {
             $table->id();
             $table->foreignId('property_id')->constrained()->onDelete('cascade');
 
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rating_stats');
+        Schema::dropIfExists('property_rating_stats');
     }
 };

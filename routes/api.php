@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\Agent\MessageController;
-use App\Http\Controllers\Api\Customer\ReviewController;
+use App\Http\Controllers\Api\Customer\AgentReviewController;
+use App\Http\Controllers\Api\Customer\PropertyReviewController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TwoFactorController;
@@ -223,8 +224,12 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::get('/properties/{propertyId}/availability', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
 
     // Property Reviews
-    Route::get('/properties/{propertyId}/reviews', [ReviewController::class, 'index']);
-    Route::post('/properties/{propertyId}/reviews', [ReviewController::class, 'store']);
+    Route::get('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'index']);
+    Route::post('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'store']);
+
+    // Agent Reviews
+    Route::get('/agent/{agentId}/reviews', [AgentReviewController::class, 'index']);
+    Route::post('/agent/{agentId}/reviews', [AgentReviewController::class, 'store']);
 });
 
 // Public property routes - Use FULL namespace

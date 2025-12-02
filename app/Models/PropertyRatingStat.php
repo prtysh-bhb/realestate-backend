@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class RatingStat extends Model
+class PropertyRatingStat extends Model
 {
+    protected $table = 'property_rating_stats';
+
     protected $fillable = [
         'property_id',
         'avg_construction',

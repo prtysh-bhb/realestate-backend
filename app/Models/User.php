@@ -119,4 +119,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Reminder::class, 'agent_id');
     }
+
+    public function agentReviewsReceived()
+    {
+        return $this->hasMany(AgentReview::class, 'agent_id');
+    }
+
+    public function agentReviewsGiven()
+    {
+        return $this->hasMany(AgentReview::class, 'user_id');
+    }
 }

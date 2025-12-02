@@ -139,11 +139,11 @@ class Property extends Model
 
     public function reviews()
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(PropertyReview::class);
     }
 
     public function ratingStat()
     {
-        return $this->hasOne(RatingStat::class);
+        return $this->hasOne(PropertyRatingStat::class);
     }
 }
