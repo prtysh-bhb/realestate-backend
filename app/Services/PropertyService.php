@@ -64,7 +64,10 @@ class PropertyService
     // Public browsing - ADD avatar HERE
     public function getAllPublishedProperties($userId = null)
     {
-        $properties = Property::with(['agent:id,name,email,avatar'])
+        $properties = Property::with([
+            'agent:id,name,email,avatar',
+            'ratingStat:id,property_id,overall_rating,avg_construction,avg_amenities,avg_management,avg_connectivity,avg_green_area,avg_locality'
+            ])
             ->where('status', 'published')
             ->where('approval_status', 'approved')
             ->orderBy('created_at', 'desc')
@@ -270,7 +273,7 @@ class PropertyService
     // Single property - ADD avatar HERE
     public function getPublicPropertyById($id, $userId = null)
     {
-        $property = Property::with('agent:id,name,email,avatar,phone,company_name')
+        $property = Property::with('agent:id,name,email,avatar,phone,company_name', 'ratingStat:id,property_id,overall_rating,avg_construction,avg_amenities,avg_management,avg_connectivity,avg_green_area,avg_locality')
             ->where('id', $id)
             ->where('status', 'published')
             ->where('approval_status', 'approved')

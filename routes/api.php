@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Agent\MessageController;
+use App\Http\Controllers\Api\Customer\ReviewController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TwoFactorController;
@@ -220,6 +221,10 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::get('/appointments/{id}', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'show']);
     Route::post('/appointments/{id}/cancel', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'cancel']);
     Route::get('/properties/{propertyId}/availability', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
+
+    // Property Reviews
+    Route::get('/properties/{propertyId}/reviews', [ReviewController::class, 'index']);
+    Route::post('/properties/{propertyId}/reviews', [ReviewController::class, 'store']);
 });
 
 // Public property routes - Use FULL namespace
