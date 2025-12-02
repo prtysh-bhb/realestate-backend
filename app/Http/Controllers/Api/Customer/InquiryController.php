@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\Customer;
 
+use App\Events\SendMessageEvent;
 use App\Http\Controllers\Controller;
+use App\Models\Message;
 use App\Services\InquiryService;
 use Illuminate\Http\Request;
 use App\Events\InquiryReceivedEvent;
@@ -37,6 +39,15 @@ class InquiryController extends Controller
             $inquiry->load(['property:id,title,location,price,type', 'agent:id,name,email,avatar', 'customer:id,name,email,phone']); 
 
             event(new InquiryReceivedEvent($inquiry));
+
+            Message::create([
+                'sender_id'   => $request->user()->id,
+                'receiver_id' => $inquiry->agent_id,
+                'type'        => 'text',
+                'message'     => $request->message ?? null
+            ]);
+
+            event(new SendMessageEvent($inquiry->agent_id, $request->user()->id, $request->message, true));
 
             return response()->json([
                 'success' => true,

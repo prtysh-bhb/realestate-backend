@@ -12,7 +12,7 @@ class ValuationController extends Controller
 {
     public function calculate(Request $request)
     {
-        throw new \Exception('Testing API failure email');
+        // throw new \Exception('Testing API failure email');
         
         $validated = $request->validate([
             'property_address' => 'required|string',

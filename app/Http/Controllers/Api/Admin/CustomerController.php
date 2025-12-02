@@ -16,9 +16,28 @@ class CustomerController extends Controller
     }
 
     // List all customers
-    public function index()
+    public function index(Request $request)
     {
-        $customers = $this->userService->getAllCustomers();
+        $filters = $request->only('search', 'status');
+
+        $customers = $this->userService->getAllCustomers($filters);
+
+        // Convert items to collection first
+        $customersData = collect($customers->items())->map(function($customer) {
+            return [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'email' => $customer->email,
+                'phone' => $customer->phone,
+                'city' => $customer->city,
+                'avatar' => $customer->avatar_url,
+                'status' => $customer->is_active,
+                'two_factor_enabled' => $customer->two_factor_enabled,
+                'total_inquiries' => $customer->inquiries_count,
+                'total_favorites' => $customer->favorites_count,
+                'joined' => $customer->created_at->format('m/d/Y'),
+            ];
+        });
 
         // Convert items to collection first
         $customersData = collect($customers->items())->map(function($customer) {
@@ -56,7 +75,7 @@ class CustomerController extends Controller
     {
         try {
             $customer = $this->userService->getCustomerById($id);
-
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Customer profile retrieved successfully',
@@ -73,6 +92,7 @@ class CustomerController extends Controller
                         'state' => $customer->state,
                         'zipcode' => $customer->zipcode,
                         'status' => $customer->is_active ? 'Active' : 'Inactive',
+                        'two_factor_enabled' => $customer->two_factor_enabled,
                         'total_inquiries' => $customer->inquiries_count,
                         'total_favorites' => $customer->favorites_count,
                         'joined' => $customer->created_at->format('m/d/Y'),

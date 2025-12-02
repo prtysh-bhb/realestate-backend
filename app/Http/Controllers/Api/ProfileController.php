@@ -38,6 +38,7 @@ class ProfileController extends Controller
                     'email_verified_at' => $user->email_verified_at,
                     'last_login_at' => $user->last_login_at,
                     'created_at' => $user->created_at,
+                    '2fa_enabled' => $user->two_factor_enabled,
                 ]
             ]
         ]);
@@ -51,20 +52,20 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $rules = [
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'name' => 'sometimes|string|max:50',
+            'email' => 'sometimes|email|max:70|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
             'bio' => 'nullable|string|max:1000',
-            'address' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'zipcode' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:100',
+            'city' => 'nullable|string|max:50',
+            'state' => 'nullable|string|max:50',
+            'zipcode' => 'nullable|string|max:10',
         ];
 
         // Add agent-specific fields if user is agent
         if ($user->isAgent()) {
-            $rules['company_name'] = 'nullable|string|max:255';
-            $rules['license_number'] = 'nullable|string|max:100';
+            $rules['company_name'] = 'nullable|string|max:100';
+            $rules['license_number'] = 'nullable|string|max:50';
         }
 
         $validated = $request->validate($rules);
@@ -107,8 +108,8 @@ class ProfileController extends Controller
     public function changePassword(Request $request)
     {
         $request->validate([
-            'current_password' => 'required|string',
-            'new_password' => ['required', 'confirmed', Password::min(8)],
+            'current_password' => 'required|string|max:50',
+            'new_password' => ['required', 'confirmed', 'max:50', Password::min(8)],
         ]);
 
         $user = $request->user();

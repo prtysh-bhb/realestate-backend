@@ -26,7 +26,6 @@ class User extends Authenticatable
         'city',
         'state',
         'zipcode',
-        'email_verified_at',
         'is_active',
         'deactivation_reason',
         'deactivated_at',
@@ -88,7 +87,40 @@ class User extends Authenticatable
 
     public function inquiries()
     {
-        return $this->hasMany(Inquiry::class);
+        return $this->hasMany(Inquiry::class, 'customer_id');
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    public function activeSubscription()
+    {
+        return $this->hasOne(UserSubscription::class)
+            ->where('status', 'active')
+            ->where('ends_at', '>', now())
+            ->latest();
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function agentAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'agent_id');
+    }
+
+    public function customerAppointments()
+    {
+        return $this->hasMany(Appointment::class, 'customer_id');
+    }
+
+    public function reminders()
+    {
+        return $this->hasMany(Reminder::class, 'agent_id');
     }
 
     public function subscriptions()

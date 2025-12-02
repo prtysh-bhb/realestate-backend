@@ -1,10 +1,16 @@
 <?php
 
+use App\Http\Controllers\Api\Agent\MessageController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SocialAuthController; 
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\PasswordResetController;
+
+// For authenticate broadcasting in API
+Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+    return \Illuminate\Support\Facades\Broadcast::auth($request);
+});
 
 // Password Reset routes (public)
 Route::post('/password/email', [PasswordResetController::class, 'sendResetLink']);
@@ -15,6 +21,16 @@ Route::post('/password/verify-token', [PasswordResetController::class, 'verifyTo
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-login', [AuthController::class, 'verifyLogin']);
+// Contact Form
+Route::post('/contact-form', [\App\Http\Controllers\Api\ContactFormController::class, 'submit']);
+// Property Valuation
+Route::post('/property-valuation', [\App\Http\Controllers\Api\ValuationController::class, 'calculate']);
+// Loan Calculator
+Route::post('/loan-eligibility', [\App\Http\Controllers\Api\LoanCalculatorController::class, 'calculate']);
+
+Route::middleware('guest:sanctum')->group(function(){
+    Route::get('/restricted-mail-domains', [AuthController::class, 'getRestrictedDomains']);
+});
 
 // Social Login
 Route::get('/auth/{provider}', [SocialAuthController::class, 'redirectToProvider']);
@@ -90,9 +106,16 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
 // Agent routes
 Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function () {
+    // Messages
+    Route::get('/messages/unread-counts', [MessageController::class, 'getUnreadMessageCounts']);
+    Route::get('/messages/customers', [MessageController::class, 'getAgentCustomers']);
+    Route::post('/messages/is_typing', [MessageController::class, 'isTyping']);
+    Route::post('/messages/sent', [MessageController::class, 'store']);
+    Route::get('/messages/{userId}', [MessageController::class,'getConversation']);
+    Route::post('/messages/read/{partnerId}', [MessageController::class, 'markAsRead']);
+
     Route::get('/dashboard', [\App\Http\Controllers\Api\Agent\DashboardController::class, 'index']);
     Route::get('/customers', [\App\Http\Controllers\Api\Admin\CustomerController::class, 'index']);
-
     
     // Check property limits
     Route::get('/properties/check-limits', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'checkLimits']);
@@ -177,6 +200,14 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
 Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Api\Customer\DashboardController::class, 'index']);
     
+    // Messages
+    Route::get('/messages/unread-counts', [MessageController::class, 'getUnreadMessageCounts']);
+    Route::post('/messages/is_typing', [MessageController::class, 'isTyping']);
+    Route::post('/messages/sent', [MessageController::class, 'store']);
+    Route::post('/messages/read/{partnerId}', [MessageController::class, 'markAsRead']);
+    Route::get('/messages/agents', [MessageController::class, 'getCustomerAgents']);
+    Route::get('/messages/{userId}', [MessageController::class, 'getConversation']);
+    
     // Favorites
     Route::get('/favorites', [\App\Http\Controllers\Api\Customer\FavoriteController::class, 'index']);
     Route::post('/favorites/{propertyId}', [\App\Http\Controllers\Api\Customer\FavoriteController::class, 'store']);
@@ -199,8 +230,8 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
 // Public property routes - Use FULL namespace
 Route::get('/properties', [\App\Http\Controllers\Api\PropertyController::class, 'index']);
 Route::get('/properties/search', [\App\Http\Controllers\Api\PropertyController::class, 'search']);
-Route::get('/properties/{id}', [\App\Http\Controllers\Api\PropertyController::class, 'show']);
-Route::get('/amenities', [\App\Http\Controllers\Api\AmenitiesController::class, 'index']);
+Route::get('/properties/{id}', [\App\Http\Controllers\Api\PropertyController::class, 'show'])->where('id', '[0-9]+');
+Route::get('/properties/attributes', [\App\Http\Controllers\Api\AmenitiesController::class, 'index']);
 
 // Profile routes (for all authenticated users)
 Route::middleware('auth:sanctum')->group(function () {

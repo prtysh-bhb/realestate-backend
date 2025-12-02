@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Rules\RestrictedDomain;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
 
@@ -19,7 +20,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', 'unique:users,email', new RestrictedDomain()],
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:agent,customer',
         ]);
@@ -149,6 +150,17 @@ class AuthController extends Controller
                     'two_factor_enabled' => $request->user()->two_factor_enabled,
                 ],
             ],
+        ]);
+    }
+
+    public function getRestrictedDomains()
+    {
+        $domains = config('app.restricted_domains');
+        $emailDomains = $domains ? explode(',', $domains) : [];
+
+        return response()->json([
+            'success' => true,
+            'domains' => $emailDomains,
         ]);
     }
 }

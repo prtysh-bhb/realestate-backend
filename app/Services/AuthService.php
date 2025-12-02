@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
@@ -22,8 +23,11 @@ class AuthService
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
+        
         // Send welcome email
-        Mail::to($user->email)->send(new WelcomeMail($user));
+        if(env('APP_ENV') == 'production'){
+            Mail::to($user->email)->send(new WelcomeMail($user));
+        }
 
         return [
             'user' => $user,
@@ -35,6 +39,10 @@ class AuthService
     {
         $user = User::where('email', $credentials['email'])->first();
 
+        Log::info('AuthService:34', [
+            'user' => $user,
+            'pass' => Hash::check($credentials['password'], $user->password)
+        ]);
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
