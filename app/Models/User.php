@@ -123,36 +123,13 @@ class User extends Authenticatable
         return $this->hasMany(Reminder::class, 'agent_id');
     }
 
-    public function subscriptions()
+    public function agentReviewsReceived()
     {
-        return $this->hasMany(UserSubscription::class);
+        return $this->hasMany(AgentReview::class, 'agent_id');
     }
 
-    public function activeSubscription()
+    public function agentReviewsGiven()
     {
-        return $this->hasOne(UserSubscription::class)
-            ->where('status', 'active')
-            ->where('ends_at', '>', now())
-            ->latest();
-    }
-
-    public function payments()
-    {
-        return $this->hasMany(Payment::class);
-    }
-
-    public function agentAppointments()
-    {
-        return $this->hasMany(Appointment::class, 'agent_id');
-    }
-
-    public function customerAppointments()
-    {
-        return $this->hasMany(Appointment::class, 'customer_id');
-    }
-
-    public function reminders()
-    {
-        return $this->hasMany(Reminder::class, 'agent_id');
+        return $this->hasMany(AgentReview::class, 'user_id');
     }
 }

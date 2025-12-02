@@ -1,6 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\BlogController;
+use App\Http\Controllers\Api\Admin\FAQController;
+use App\Http\Controllers\Api\Admin\NewsController;
 use App\Http\Controllers\Api\Agent\MessageController;
+use App\Http\Controllers\Api\Customer\AgentReviewController;
+use App\Http\Controllers\Api\Customer\PropertyReviewController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SocialAuthController; 
@@ -21,6 +26,17 @@ Route::post('/password/verify-token', [PasswordResetController::class, 'verifyTo
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-login', [AuthController::class, 'verifyLogin']);
+
+// Social Login
+Route::get('/auth/{provider}', [SocialAuthController::class, 'redirectToProvider']);
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback']);
+
+// Contact Form
+Route::post('/contact-form', [\App\Http\Controllers\Api\ContactFormController::class, 'submit']);
+// Property Valuation
+Route::post('/property-valuation', [\App\Http\Controllers\Api\ValuationController::class, 'calculate']);
+// Loan Calculator
+Route::post('/loan-eligibility', [\App\Http\Controllers\Api\LoanCalculatorController::class, 'calculate']);
 // Contact Form
 Route::post('/contact-form', [\App\Http\Controllers\Api\ContactFormController::class, 'submit']);
 // Property Valuation
@@ -102,6 +118,20 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/subscription-plans/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\SubscriptionPlanController::class, 'toggleStatus']);
 
     Route::post('/inquiries/{id}/assign', [\App\Http\Controllers\Api\Admin\InquiryController::class, 'assignLead']);
+
+    // CMS Management
+
+    // faqs
+    Route::post('/faqs/update-status/{id}', [FAQController::class, 'updateStatus']);
+    Route::apiResource('/faqs', FAQController::class);
+
+    // blogs
+    Route::post('/blogs/update-status/{id}', [BlogController::class, 'updateStatus']);
+    Route::apiResource('/blogs', BlogController::class);
+
+    // news
+    Route::post('/news/update-status/{id}', [NewsController::class, 'updateStatus']);
+    Route::apiResource('/news', NewsController::class);
 });
 
 // Agent routes
@@ -225,6 +255,14 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::get('/appointments/{id}', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'show']);
     Route::post('/appointments/{id}/cancel', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'cancel']);
     Route::get('/properties/{propertyId}/availability', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
+
+    // Property Reviews
+    Route::get('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'index']);
+    Route::post('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'store']);
+
+    // Agent Reviews
+    Route::get('/agent/{agentId}/reviews', [AgentReviewController::class, 'index']);
+    Route::post('/agent/{agentId}/reviews', [AgentReviewController::class, 'store']);
 });
 
 // Public property routes - Use FULL namespace

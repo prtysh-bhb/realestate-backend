@@ -60,6 +60,7 @@ class CustomerController extends Controller
             'message' => 'Customers retrieved successfully',
             'data' => [
                 'customers' => $customersData,
+                'customers' => $customersData,
                 'pagination' => [
                     'total' => $customers->total(),
                     'per_page' => $customers->perPage(),

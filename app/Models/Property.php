@@ -136,4 +136,14 @@ class Property extends Model
     {
         return $this->hasMany(Appointment::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(PropertyReview::class);
+    }
+
+    public function ratingStat()
+    {
+        return $this->hasOne(PropertyRatingStat::class);
+    }
 }

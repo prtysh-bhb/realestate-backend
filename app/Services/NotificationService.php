@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\SendNotificationEvent;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -27,11 +28,14 @@ class NotificationService
             ]);
 
             // Send email if requested
-            if ($sendEmail && $mailClass && $user->email) {
+            if ($sendEmail && $mailClass && $user->email && env('APP_ENV') == 'production') {
                 $mail = new $mailClass($data);
                 Mail::to($user->email)->send($mail);
             }
 
+            // Fire notification event
+            event(new SendNotificationEvent($user->id));
+            
             Log::info("Notification sent: {$type} to user {$user->id}");
 
         } catch (\Exception $e) {
