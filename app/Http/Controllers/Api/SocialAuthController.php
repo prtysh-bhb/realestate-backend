@@ -26,48 +26,60 @@ class SocialAuthController extends Controller
     public function handleProviderCallback($provider)
     {
         $this->validateProvider($provider);
-        
+
         try {
-            $socialUser = Socialite::driver($provider)->stateless()->user();
+            // Disable SSL verification for local development
+            if (app()->environment('local')) {
+                config(["services.{$provider}.guzzle" => ['verify' => false]]);
+            }
             
+            $socialUser = Socialite::driver($provider)->stateless()->user();
+
             // Find or create user
             $user = User::where('email', $socialUser->getEmail())->first();
-            
+
             if ($user) {
-                // Update existing user
                 $user->update([
                     'provider' => $provider,
                     'provider_id' => $socialUser->getId(),
                     'avatar' => $socialUser->getAvatar(),
                 ]);
             } else {
-                // Create new user
                 $user = User::create([
                     'name' => $socialUser->getName(),
                     'email' => $socialUser->getEmail(),
                     'provider' => $provider,
                     'provider_id' => $socialUser->getId(),
                     'avatar' => $socialUser->getAvatar(),
-                    'password' => Hash::make(uniqid()), // Random password
-                    'role' => 'customer', // Default role
+                    'password' => Hash::make(uniqid()),
+                    'role' => 'customer',
                     'is_active' => true,
                 ]);
             }
-            
+
             // Create token
             $token = $user->createToken('auth_token')->plainTextToken;
-            
-            return response()->json([
-                'success' => true,
-                'user' => $user,
-                'token' => $token,
-            ]);
-            
+
+            // Minimal user payload (avoid leaking sensitive fields)
+            $userPayload = $user->only(['id', 'name', 'email', 'role', 'avatar']);
+            $userJson = json_encode($userPayload);
+
+            // Base64 encode to make it URL safe
+            $userB64 = base64_encode($userJson);
+
+            // Get frontend URL from .env
+            $frontend = rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/');
+
+            // Build redirect URL. We'll pass token and user (base64) as query params.
+            $redirectUrl = $frontend . '/social-callback?token=' . urlencode($token) . '&user=' . urlencode($userB64) . '&provider=' . urlencode($provider);
+
+            return redirect($redirectUrl);
+
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Authentication failed: ' . $e->getMessage(),
-            ], 500);
+            // Get frontend URL from .env
+            $frontend = rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/');
+            $errorUrl = $frontend . '/social-callback?error=' . urlencode($e->getMessage());
+            return redirect($errorUrl);
         }
     }
     
