@@ -42,7 +42,9 @@ class LoanCalculatorController extends Controller
                 'max_eligible_emi' => round($maxEmi, 2),
             ];
 
-            Mail::to($validated['email'])->send(new LoanEligibilityResultMail($result));
+            if(env('APP_ENV') == 'production'){
+                Mail::to($validated['email'])->send(new LoanEligibilityResultMail($result));
+            }
 
             return response()->json([
                 'success' => true,
@@ -52,7 +54,7 @@ class LoanCalculatorController extends Controller
             
         } catch (\Exception $e) {
             // Send API failure alert
-            if ($systemEmail = config('mail.system_alert_email')) {
+            if ($systemEmail = config('mail.system_alert_email') && env('APP_ENV') == 'production') {
                 Mail::to($systemEmail)->send(new ApiFailureAlertMail($e, [
                     'controller' => 'LoanCalculatorController',
                     'method' => 'calculate',
