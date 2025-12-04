@@ -225,6 +225,16 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
 
     // Subscription status check
     Route::get('/subscription/status', [\App\Http\Controllers\Api\Agent\PropertyController::class, 'checkSubscriptionStatus']);
+
+    // Agent Blog Management
+    Route::get('/blogs', [\App\Http\Controllers\Api\Agent\BlogController::class, 'index']);
+    Route::post('/blogs', [\App\Http\Controllers\Api\Agent\BlogController::class, 'store']);
+    Route::get('/blogs/statistics', [\App\Http\Controllers\Api\Agent\BlogController::class, 'statistics']);
+    Route::get('/blogs/categories', [\App\Http\Controllers\Api\Agent\BlogController::class, 'categories']);
+    Route::get('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'show']);
+    Route::put('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'update']);
+    Route::post('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'update']); // For form-data
+    Route::delete('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'destroy']);
 });
 
 // Customer routes
