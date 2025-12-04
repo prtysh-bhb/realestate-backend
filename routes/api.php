@@ -258,13 +258,15 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::get('/properties/{propertyId}/availability', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
 
     // Property Reviews
-    Route::get('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'index']);
     Route::post('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'store']);
 
     // Agent Reviews
-    Route::get('/agent/{agentId}/reviews', [AgentReviewController::class, 'index']);
     Route::post('/agent/{agentId}/reviews', [AgentReviewController::class, 'store']);
 });
+
+// Rating public APIs
+Route::get('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'index']);
+Route::get('/agent/{agentId}/reviews', [AgentReviewController::class, 'index']);
 
 // Public property routes - Use FULL namespace
 Route::get('/properties', [\App\Http\Controllers\Api\PropertyController::class, 'index']);
