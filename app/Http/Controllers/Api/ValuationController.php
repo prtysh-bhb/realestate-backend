@@ -34,7 +34,9 @@ class ValuationController extends Controller
                 'valuation_date' => now()->format('Y-m-d'),
             ];
 
-            Mail::to($validated['email'])->send(new ValuationReportMail($result));
+            if(env('APP_ENV') == 'production'){
+                Mail::to($validated['email'])->send(new ValuationReportMail($result));
+            }
 
             return response()->json([
                 'success' => true,
@@ -44,7 +46,7 @@ class ValuationController extends Controller
             
         } catch (\Exception $e) {
             // Send API failure alert
-            if ($systemEmail = config('mail.system_alert_email')) {
+            if ($systemEmail = config('mail.system_alert_email') && env('APP_ENV') == 'production') {
                 Mail::to($systemEmail)->send(new ApiFailureAlertMail($e, [
                     'controller' => 'ValuationController',
                     'method' => 'calculate',

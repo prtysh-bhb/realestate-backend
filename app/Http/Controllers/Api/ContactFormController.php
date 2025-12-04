@@ -20,9 +20,11 @@ class ContactFormController extends Controller
             'message' => 'required|string|max:2000',
         ]);
 
-        $admins = User::where('role', 'admin')->get();
-        foreach ($admins as $admin) {
-            Mail::to($admin->email)->send(new ContactFormSubmissionMail($validated));
+        if(env('APP_ENV') == 'production'){
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->send(new ContactFormSubmissionMail($validated));
+            }
         }
 
         return response()->json([

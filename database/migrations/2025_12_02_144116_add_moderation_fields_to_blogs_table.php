@@ -55,10 +55,6 @@ return new class extends Migration
             if (!Schema::hasColumn('blogs', 'deleted_at')) {
                 $table->softDeletes();
             }
-            
-            // Add indexes
-            $table->index(['status', 'published_at']);
-            $table->index('user_id');
         });
     }
 
