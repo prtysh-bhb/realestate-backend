@@ -44,7 +44,6 @@ class AgentController extends Controller
             'message' => 'Agents retrieved successfully',
             'data' => [
                 'agents' => $agentsData,
-                'agents' => $agentsData,
                 'pagination' => [
                     'total' => $agents->total(),
                     'per_page' => $agents->perPage(),

@@ -114,6 +114,18 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/faqs/update-status/{id}', [FAQController::class, 'updateStatus']);
     Route::apiResource('/faqs', FAQController::class);
 
+    // Blog moderation
+    Route::get('/blogs/pending', [BlogController::class, 'pending']);
+    Route::get('/blogs/statistics', [BlogController::class, 'statistics']);
+    Route::post('/blogs/{id}/approve', [BlogController::class, 'approve']);
+    Route::post('/blogs/{id}/reject', [BlogController::class, 'reject']);
+    
+    // Blog categories
+    Route::get('/blog-categories', [BlogController::class, 'indexCategories']);
+    Route::post('/blog-categories', [BlogController::class, 'storeCategory']);
+    Route::put('/blog-categories/{id}', [BlogController::class, 'updateCategory']);
+    Route::delete('/blog-categories/{id}', [BlogController::class, 'destroyCategory']);
+
     // blogs
     Route::post('/blogs/update-status/{id}', [BlogController::class, 'updateStatus']);
     Route::apiResource('/blogs', BlogController::class);
@@ -246,19 +258,37 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::get('/properties/{propertyId}/availability', [\App\Http\Controllers\Api\Customer\AppointmentController::class, 'checkAvailability']);
 
     // Property Reviews
-    Route::get('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'index']);
     Route::post('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'store']);
 
     // Agent Reviews
-    Route::get('/agent/{agentId}/reviews', [AgentReviewController::class, 'index']);
     Route::post('/agent/{agentId}/reviews', [AgentReviewController::class, 'store']);
 });
+
+// Rating public APIs
+Route::get('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'index']);
+Route::get('/agent/{agentId}/reviews', [AgentReviewController::class, 'index']);
 
 // Public property routes - Use FULL namespace
 Route::get('/properties', [\App\Http\Controllers\Api\PropertyController::class, 'index']);
 Route::get('/properties/search', [\App\Http\Controllers\Api\PropertyController::class, 'search']);
 Route::get('/properties/{id}', [\App\Http\Controllers\Api\PropertyController::class, 'show'])->where('id', '[0-9]+');
 Route::get('/properties/attributes', [\App\Http\Controllers\Api\AmenitiesController::class, 'index']);
+
+// ========== PUBLIC BLOG ROUTES (ADD THIS SECTION) ==========
+Route::prefix('blogs')->group(function () {
+    Route::get('/featured', [\App\Http\Controllers\Api\BlogController::class, 'featured']);
+    Route::get('/latest', [\App\Http\Controllers\Api\BlogController::class, 'latest']);
+    Route::get('/popular', [\App\Http\Controllers\Api\BlogController::class, 'popular']);
+    Route::get('/search', [\App\Http\Controllers\Api\BlogController::class, 'search']); // Before /{slug}
+    Route::get('/statistics', [\App\Http\Controllers\Api\BlogController::class, 'statistics']);
+    Route::get('/categories', [\App\Http\Controllers\Api\BlogController::class, 'categories']);
+    Route::get('/category/{categorySlug}', [\App\Http\Controllers\Api\BlogController::class, 'byCategory']);
+    Route::get('/author/{userId}', [\App\Http\Controllers\Api\BlogController::class, 'byAuthor']);
+ 
+    Route::get('/', [\App\Http\Controllers\Api\BlogController::class, 'index']);
+    Route::get('/{slug}', [\App\Http\Controllers\Api\BlogController::class, 'show']); // This should be LAST
+    Route::get('/{slug}/related', [\App\Http\Controllers\Api\BlogController::class, 'related']);
+});
 
 // Profile routes (for all authenticated users)
 Route::middleware('auth:sanctum')->group(function () {
