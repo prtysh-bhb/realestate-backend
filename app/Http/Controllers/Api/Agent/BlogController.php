@@ -50,6 +50,7 @@ class BlogController extends Controller
             'excerpt' => 'nullable|string|max:500',
             'content' => 'required|string',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'featured_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120', // Added
             'status' => 'required|in:draft,pending',
             'meta_tags' => 'nullable|array',
         ]);
@@ -63,16 +64,24 @@ class BlogController extends Controller
             $count++;
         }
 
-        $data = $request->except('image');
+        $data = $request->except(['image', 'featured_image']);
         $data['user_id'] = auth()->id();
         $data['slug'] = $slug;
 
-        // Handle image upload properly
+        // Handle image upload
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = time() . '_' . $file->getClientOriginalName();
             $path = $file->storeAs('blogs', $filename, 'public');
             $data['image'] = $path;
+        }
+
+        // Handle featured_image upload
+        if ($request->hasFile('featured_image')) {
+            $file = $request->file('featured_image');
+            $filename = time() . '_featured_' . $file->getClientOriginalName();
+            $path = $file->storeAs('blogs', $filename, 'public');
+            $data['featured_image'] = $path;
         }
 
         $blog = Blog::create($data);
@@ -89,7 +98,6 @@ class BlogController extends Controller
     {
         $blog = Blog::where('user_id', auth()->id())->findOrFail($id);
 
-        // Can only edit if draft or rejected
         if (!in_array($blog->status, ['draft', 'rejected'])) {
             return response()->json([
                 'success' => false,
@@ -103,13 +111,13 @@ class BlogController extends Controller
             'excerpt' => 'nullable|string|max:500',
             'content' => 'sometimes|required|string',                
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'featured_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120', // Added
             'status' => 'sometimes|required|in:draft,pending',      
             'meta_tags' => 'nullable|array',
         ]);
 
-        $data = $request->except('image');
+        $data = $request->except(['image', 'featured_image']); // Exclude both
 
-        // Update slug if title changed
         if ($request->has('title') && $request->title !== $blog->title) {
             $slug = Str::slug($request->title);
             $originalSlug = $slug;
@@ -134,7 +142,18 @@ class BlogController extends Controller
             $data['image'] = $path;
         }
 
-        // Reset review status if resubmitting
+        // Handle featured_image upload
+        if ($request->hasFile('featured_image')) {
+            if ($blog->featured_image && Storage::disk('public')->exists($blog->featured_image)) {
+                Storage::disk('public')->delete($blog->featured_image);
+            }
+            
+            $file = $request->file('featured_image');
+            $filename = time() . '_featured_' . $file->getClientOriginalName();
+            $path = $file->storeAs('blogs', $filename, 'public');
+            $data['featured_image'] = $path;
+        }
+
         if ($request->has('status') && $request->status === 'pending' && $blog->status === 'rejected') {
             $data['rejection_reason'] = null;
             $data['reviewed_by'] = null;
@@ -158,6 +177,11 @@ class BlogController extends Controller
         // Delete image if exists
         if ($blog->image && Storage::disk('public')->exists($blog->image)) {
             Storage::disk('public')->delete($blog->image);
+        }
+
+        // Delete featured_image if exists
+        if ($blog->featured_image && Storage::disk('public')->exists($blog->featured_image)) {
+            Storage::disk('public')->delete($blog->featured_image);
         }
 
         $blog->delete();
