@@ -11,6 +11,10 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SocialAuthController; 
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\Admin\CreditController as AdminCreditController;
+use App\Http\Controllers\Api\Admin\AppSettingController;
+use App\Http\Controllers\Api\Admin\WalletController as AdminWalletController;
+use App\Http\Controllers\Api\Customer\WalletController as CustomerWalletController;
 
 // For authenticate broadcasting in API
 Route::middleware('auth:sanctum')->post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
@@ -133,6 +137,31 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // news
     Route::post('/news/update-status/{id}', [NewsController::class, 'updateStatus']);
     Route::apiResource('/news', NewsController::class);
+
+    // Credit Packages Management
+    Route::get('/credits', [AdminCreditController::class, 'index']);
+    Route::get('/credits/{id}', [AdminCreditController::class, 'show']);
+    Route::post('/credits', [AdminCreditController::class, 'store']);
+    Route::put('/credits/{id}', [AdminCreditController::class, 'update']);
+    Route::delete('/credits/{id}', [AdminCreditController::class, 'destroy']);
+
+    // App Settings Management
+    Route::get('/settings', [AppSettingController::class, 'index']);
+    Route::get('/settings/{id}', [AppSettingController::class, 'show']);
+    Route::post('/settings', [AppSettingController::class, 'store']);
+    Route::put('/settings/{id}', [AppSettingController::class, 'update']);
+    Route::post('/settings/bulk-update', [AppSettingController::class, 'bulkUpdate']);
+    Route::delete('/settings/{id}', [AppSettingController::class, 'destroy']);
+
+    // Wallet Management
+    Route::get('/wallets', [AdminWalletController::class, 'index']);
+    Route::get('/wallets/{userId}', [AdminWalletController::class, 'show']);
+    Route::post('/wallets/{userId}/add-credits', [AdminWalletController::class, 'addCredits']);
+    Route::post('/wallets/{userId}/deduct-credits', [AdminWalletController::class, 'deductCredits']);
+
+    // Reports
+    Route::get('/reports/credit-usage', [AdminWalletController::class, 'creditUsageReport']);
+    Route::get('/transactions', [AdminWalletController::class, 'transactions']);
 });
 
 // Agent routes
@@ -272,6 +301,14 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
 
     // Agent Reviews
     Route::post('/agent/{agentId}/reviews', [AgentReviewController::class, 'store']);
+
+    // Wallet
+    Route::get('/wallet', [CustomerWalletController::class, 'index']);
+    Route::get('/wallet/balance', [CustomerWalletController::class, 'balance']);
+    Route::get('/wallet/packages', [CustomerWalletController::class, 'packages']);
+    Route::post('/wallet/buy', [CustomerWalletController::class, 'buy']);
+    Route::post('/wallet/spend', [CustomerWalletController::class, 'spend']);
+    Route::get('/wallet/transactions', [CustomerWalletController::class, 'transactions']);
 });
 
 // Rating public APIs

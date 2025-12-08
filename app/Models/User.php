@@ -132,4 +132,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(AgentReview::class, 'user_id');
     }
+
+    public function wallet()
+    {
+        return $this->hasOne(UserWallet::class);
+    }
+
+    public function creditTransactions()
+    {
+        return $this->hasMany(CreditTransaction::class);
+    }
+
+    // Get or create wallet
+    public function getOrCreateWallet()
+    {
+        return $this->wallet ?? $this->wallet()->create([
+            'current_credits' => 0,
+            'total_credits_purchased' => 0,
+            'total_credits_spent' => 0,
+        ]);
+    }
 }
