@@ -22,7 +22,10 @@ class BlogController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return response()->json($blogs);
+        return response()->json([
+            'success' => true,
+            'data' => $blogs,
+        ]);
     }
 
     // Get single blog
@@ -32,7 +35,10 @@ class BlogController extends Controller
             ->with(['category', 'reviewer'])
             ->findOrFail($id);
 
-        return response()->json($blog);
+        return response()->json([
+            'success' => true,
+            'data' => $blog,
+        ]);
     }
 
     // Create blog
@@ -72,8 +78,9 @@ class BlogController extends Controller
         $blog = Blog::create($data);
 
         return response()->json([
+            'success' => true,
             'message' => 'Blog created successfully',
-            'blog' => $blog->load('category'),
+            'data' => $blog->load('category'),
         ], 201);
     }
 
@@ -85,6 +92,7 @@ class BlogController extends Controller
         // Can only edit if draft or rejected
         if (!in_array($blog->status, ['draft', 'rejected'])) {
             return response()->json([
+                'success' => false,
                 'message' => 'Cannot edit blog in ' . $blog->status . ' status',
             ], 403);
         }
@@ -136,8 +144,9 @@ class BlogController extends Controller
         $blog->update($data);
 
         return response()->json([
+            'success' => true,
             'message' => 'Blog updated successfully',
-            'blog' => $blog->load('category'),
+            'data' => $blog->load('category'),
         ]);
     }
 
@@ -154,6 +163,7 @@ class BlogController extends Controller
         $blog->delete();
 
         return response()->json([
+            'success' => true,
             'message' => 'Blog deleted successfully',
         ]);
     }
@@ -162,7 +172,11 @@ class BlogController extends Controller
     public function categories()
     {
         $categories = BlogCategory::where('is_active', true)->get();
-        return response()->json($categories);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $categories,
+        ]);
     }
 
     // Blog statistics
@@ -179,6 +193,9 @@ class BlogController extends Controller
             'total_views' => Blog::where('user_id', $userId)->sum('views_count'),
         ];
 
-        return response()->json($stats);
+        return response()->json([
+            'success' => true,
+            'data' => $stats,
+        ]);
     }
 }
