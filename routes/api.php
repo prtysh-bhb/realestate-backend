@@ -94,8 +94,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/export-users', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'export']);
 
     // User Details
-    Route::get('/agents/{id}', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'showAgent']);
-    Route::get('/customers/{id}', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'showCustomer']);
     Route::put('/users/{id}/profile', [\App\Http\Controllers\Api\Admin\UserManagementController::class, 'updateProfile']);
 
     // Subscription Plans Management (Admin Only)
@@ -124,6 +122,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/blog-categories', [BlogController::class, 'indexCategories']);
     Route::post('/blog-categories', [BlogController::class, 'storeCategory']);
     Route::put('/blog-categories/{id}', [BlogController::class, 'updateCategory']);
+    Route::post('/blog-categories/update-status/{id}', [BlogController::class, 'updateCategoryStatus']);
     Route::delete('/blog-categories/{id}', [BlogController::class, 'destroyCategory']);
 
     // blogs
@@ -275,6 +274,7 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
 });
 
 // Rating public APIs
+Route::get('/faqs', [FAQController::class, 'index']);
 Route::get('/properties/{propertyId}/reviews', [PropertyReviewController::class, 'index']);
 Route::get('/agent/{agentId}/reviews', [AgentReviewController::class, 'index']);
 
