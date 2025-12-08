@@ -7,6 +7,7 @@ use App\Models\Blog;
 use App\Models\BlogCategory;
 use App\Services\ContentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class BlogController extends Controller
@@ -53,18 +54,18 @@ class BlogController extends Controller
     // Original store method - keep for backward compatibility
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'title'       => 'required|string|max:255',
+        $validated = $request->validate([
+            'title' => 'required|string|max:191',
             'description' => 'nullable|string|max:2000',
-            'content'     => 'nullable|string',
-            'excerpt'     => 'nullable|string|max:500',
+            'content' => 'nullable|string',
+            'excerpt' => 'nullable|string|max:500',
             'category_id' => 'nullable|exists:blog_categories,id',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'status'      => 'nullable|in:draft,pending,approved,rejected',
-            'meta_tags'   => 'nullable|array',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'featured_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'status' => 'nullable|in:draft,pending,approved,rejected',
+            'meta_tags' => 'nullable|array',
         ]);
 
-        // Generate slug
         $slug = Str::slug($request->title);
         $originalSlug = $slug;
         $count = 1;
@@ -73,27 +74,43 @@ class BlogController extends Controller
             $slug = $originalSlug . '-' . $count;
             $count++;
         }
-        $data['slug'] = $slug;
 
-        // Set user_id (admin creating blog)
-        $data['user_id'] = auth()->id();
+        $validated['slug'] = $slug;
+        $validated['user_id'] = auth()->id();
 
+        // Handle image upload
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image');
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('blogs', $filename, 'public');
+            $validated['image'] = $path;
         }
 
-        $blog = $this->service->create(
-            Blog::class,
-            $data,
-            'image',
-            'blogs'
-        );
+        // Handle featured_image upload
+        if ($request->hasFile('featured_image')) {
+            $file = $request->file('featured_image');
+            $filename = time() . '_featured_' . $file->getClientOriginalName();
+            $path = $file->storeAs('blogs', $filename, 'public');
+            $validated['featured_image'] = $path;
+        }
+
+        if (!isset($validated['status'])) {
+            $validated['status'] = 'draft';
+        }
+
+        if ($validated['status'] === 'approved') {
+            $validated['reviewed_by'] = auth()->id();
+            $validated['reviewed_at'] = now();
+            $validated['published_at'] = now();
+        }
+
+        $blog = Blog::create($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Blog created successfully',
-            'data' => $blog->load('category', 'user')
-        ]);
+            'data' => $blog->load('category', 'user'),
+        ], 201);
     }
 
     // Original show method
@@ -110,21 +127,21 @@ class BlogController extends Controller
     // Original update method
     public function update(Request $request, $id)
     {
-        $data = $request->validate([
-            'title'       => 'required|string|max:255',
-            'description' => 'nullable|string|max:2000',
-            'content'     => 'nullable|string',
-            'excerpt'     => 'nullable|string|max:500',
-            'category_id' => 'nullable|exists:blog_categories,id',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'status'      => 'nullable|in:draft,pending,approved,rejected',
-            'meta_tags'   => 'nullable|array',
-        ]);
-
         $blog = Blog::findOrFail($id);
 
-        // Update slug if title changed
-        if ($request->title !== $blog->title) {
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:191',
+            'description' => 'nullable|string|max:2000',
+            'content' => 'nullable|string',
+            'excerpt' => 'nullable|string|max:500',
+            'category_id' => 'nullable|exists:blog_categories,id',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'featured_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'status' => 'nullable|in:draft,pending,approved,rejected',
+            'meta_tags' => 'nullable|array',
+        ]);
+
+        if ($request->has('title') && $request->title !== $blog->title) {
             $slug = Str::slug($request->title);
             $originalSlug = $slug;
             $count = 1;
@@ -133,25 +150,45 @@ class BlogController extends Controller
                 $slug = $originalSlug . '-' . $count;
                 $count++;
             }
-            $data['slug'] = $slug;
+            $validated['slug'] = $slug;
         }
 
+        // Handle image upload
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image');
+            if ($blog->image && Storage::disk('public')->exists($blog->image)) {
+                Storage::disk('public')->delete($blog->image);
+            }
+            
+            $file = $request->file('image');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('blogs', $filename, 'public');
+            $validated['image'] = $path;
         }
 
-        $blog = $this->service->update(
-            Blog::class,
-            $id,
-            $data,
-            'image',
-            'blogs'
-        );
+        // Handle featured_image upload
+        if ($request->hasFile('featured_image')) {
+            if ($blog->featured_image && Storage::disk('public')->exists($blog->featured_image)) {
+                Storage::disk('public')->delete($blog->featured_image);
+            }
+            
+            $file = $request->file('featured_image');
+            $filename = time() . '_featured_' . $file->getClientOriginalName();
+            $path = $file->storeAs('blogs', $filename, 'public');
+            $validated['featured_image'] = $path;
+        }
+
+        if (isset($validated['status']) && $validated['status'] === 'approved' && $blog->status !== 'approved') {
+            $validated['reviewed_by'] = auth()->id();
+            $validated['reviewed_at'] = now();
+            $validated['published_at'] = now();
+        }
+
+        $blog->update($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Blog updated successfully',
-            'data' => $blog->load('category', 'user')
+            'data' => $blog->load('category', 'user'),
         ]);
     }
 
