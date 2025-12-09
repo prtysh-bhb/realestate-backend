@@ -42,12 +42,11 @@ class BlogController extends Controller
             ->with(['user', 'category', 'approvedComments.user'])
             ->firstOrFail();
 
-        // Increment view count
         $blog->increment('views_count');
 
         return response()->json([
             'success' => true,
-            'data' => $blog
+            'data' => $blog,
         ]);
     }
 
@@ -216,6 +215,24 @@ class BlogController extends Controller
         return response()->json([
             'success' => true,
             'data' => $stats
+        ]);
+    }
+
+    /**
+     * Get comments for public viewing (no auth required)
+     */
+    public function comments($slug)
+    {
+        $blog = Blog::where('slug', $slug)->published()->firstOrFail();
+
+        $comments = $blog->approvedComments()
+            ->with('user:id,name,avatar')
+            ->latest()
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $comments,
         ]);
     }
 }

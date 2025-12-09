@@ -162,6 +162,12 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Reports
     Route::get('/reports/credit-usage', [AdminWalletController::class, 'creditUsageReport']);
     Route::get('/transactions', [AdminWalletController::class, 'transactions']);
+
+    // Blog Comments Dashboard
+    Route::get('/blog-comments', [\App\Http\Controllers\Api\Admin\BlogCommentController::class, 'index']);
+    Route::get('/blog-comments/statistics', [\App\Http\Controllers\Api\Admin\BlogCommentController::class, 'statistics']);
+    Route::get('/blog-comments/{id}', [\App\Http\Controllers\Api\Admin\BlogCommentController::class, 'show']);
+    Route::delete('/blog-comments/{id}', [\App\Http\Controllers\Api\Admin\BlogCommentController::class, 'destroy']);
 });
 
 // Agent routes
@@ -310,6 +316,12 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::post('/wallet/buy', [CustomerWalletController::class, 'buy']);
     Route::post('/wallet/spend', [CustomerWalletController::class, 'spend']);
     Route::get('/wallet/transactions', [CustomerWalletController::class, 'transactions']);
+
+    // Blog Comments
+    Route::post('/blogs/{blogId}/comments', [\App\Http\Controllers\Api\Customer\BlogCommentController::class, 'store']);
+    Route::get('/my-comments', [\App\Http\Controllers\Api\Customer\BlogCommentController::class, 'myComments']);
+    Route::put('/comments/{id}', [\App\Http\Controllers\Api\Customer\BlogCommentController::class, 'update']);
+    Route::delete('/comments/{id}', [\App\Http\Controllers\Api\Customer\BlogCommentController::class, 'destroy']);
 });
 
 // Rating public APIs
@@ -336,6 +348,7 @@ Route::prefix('blogs')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\BlogController::class, 'index']);
     Route::get('/{slug}', [\App\Http\Controllers\Api\BlogController::class, 'show']); // This should be LAST
     Route::get('/{slug}/related', [\App\Http\Controllers\Api\BlogController::class, 'related']);
+    Route::get('/{slug}/comments', [\App\Http\Controllers\Api\BlogController::class, 'comments']);
 });
 
 // Profile routes (for all authenticated users)
