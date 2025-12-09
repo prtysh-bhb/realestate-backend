@@ -261,6 +261,7 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     Route::get('/blogs/statistics', [\App\Http\Controllers\Api\Agent\BlogController::class, 'statistics']);
     Route::get('/blogs/categories', [\App\Http\Controllers\Api\Agent\BlogController::class, 'categories']);
     Route::get('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'show']);
+    Route::get('/blogs/{id}/comments', [\App\Http\Controllers\Api\Agent\BlogController::class, 'comments']);
     Route::put('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'update']);
     Route::post('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'update']); // For form-data
     Route::delete('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'destroy']);

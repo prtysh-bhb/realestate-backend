@@ -16,6 +16,7 @@ class BlogController extends Controller
     {
         $blogs = Blog::where('user_id', auth()->id())
             ->with(['category', 'reviewer'])
+            ->withCount('approvedComments')
             ->when($request->status, function ($query, $status) {
                 return $query->where('status', $status);
             })
@@ -32,7 +33,7 @@ class BlogController extends Controller
     public function show($id)
     {
         $blog = Blog::where('user_id', auth()->id())
-            ->with(['category', 'reviewer'])
+            ->with(['category', 'reviewer', 'approvedComments.user'])
             ->findOrFail($id);
 
         return response()->json([
@@ -220,6 +221,22 @@ class BlogController extends Controller
         return response()->json([
             'success' => true,
             'data' => $stats,
+        ]);
+    }
+
+    // Get comments for agent's blog
+    public function comments($id)
+    {
+        $blog = Blog::where('user_id', auth()->id())->findOrFail($id);
+
+        $comments = $blog->approvedComments()
+            ->with('user:id,name,avatar')
+            ->latest()
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $comments,
         ]);
     }
 }
