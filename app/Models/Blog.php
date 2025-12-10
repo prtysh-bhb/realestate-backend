@@ -78,7 +78,8 @@ class Blog extends Model
             return $imagePath;
         }
 
-        return asset('storage/' . $imagePath);
+        // Otherwise, construct the storage URL
+        return asset('storage/blogs/' . $imagePath);
     }
 
     // Scopes

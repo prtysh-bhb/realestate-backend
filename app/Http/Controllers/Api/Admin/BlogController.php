@@ -369,6 +369,19 @@ class BlogController extends Controller
         ]);
     }
 
+    public function updateCategoryStatus(Request $request, $id)
+    {
+        $category = BlogCategory::findOrFail($id);
+        $category->is_active = !$category->is_active;
+        $category->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Category status updated successfully',
+            'data' => $category,
+        ]);
+    }
+
     public function destroyCategory($id)
     {
         $category = BlogCategory::findOrFail($id);
