@@ -30,6 +30,8 @@ Route::post('/password/verify-token', [PasswordResetController::class, 'verifyTo
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-login', [AuthController::class, 'verifyLogin']);
+// Credit Packages - Public pricing page
+Route::get('/credit-packages', [\App\Http\Controllers\Api\CreditController::class, 'packages']);
 
 // Social Login
 Route::get('/auth/{provider}', [SocialAuthController::class, 'redirectToProvider']);
