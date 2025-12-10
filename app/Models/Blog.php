@@ -18,9 +18,9 @@ class Blog extends Model
         'slug',
         'excerpt',
         'content',
-        'description', // Keep old field for compatibility
+        'description',
         'featured_image',
-        'image', // Keep old field for compatibility
+        'image',
         'status',
         'rejection_reason',
         'reviewed_by',
@@ -68,14 +68,12 @@ class Blog extends Model
     // Accessors
     public function getImageUrlAttribute()
     {
-        // Support both old 'image' and new 'featured_image' fields
         $imagePath = $this->featured_image ?? $this->image;
         
         if (!$imagePath) {
             return null;
         }
 
-        // If it's already a full URL, return as is
         if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
             return $imagePath;
         }

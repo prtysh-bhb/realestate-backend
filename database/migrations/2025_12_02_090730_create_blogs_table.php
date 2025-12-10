@@ -21,12 +21,12 @@ return new class extends Migration
             // Basic fields (existing)
             $table->string('title');
             $table->string('slug')->unique();
-            $table->text('description')->nullable(); // Made nullable
+            $table->text('description')->nullable();
             $table->text('excerpt')->nullable();
             $table->longText('content')->nullable();
             
             // Images (support both old and new)
-            $table->string('image')->nullable(); // Keep for backward compatibility
+            $table->string('image')->nullable();
             $table->string('featured_image')->nullable();
             
             // Status (updated enum)
