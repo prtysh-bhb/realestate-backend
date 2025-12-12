@@ -168,6 +168,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/blog-comments/statistics', [\App\Http\Controllers\Api\Admin\BlogCommentController::class, 'statistics']);
     Route::get('/blog-comments/{id}', [\App\Http\Controllers\Api\Admin\BlogCommentController::class, 'show']);
     Route::delete('/blog-comments/{id}', [\App\Http\Controllers\Api\Admin\BlogCommentController::class, 'destroy']);
+
+    // AI Chat Leads
+    Route::get('/ai/chat/leads', [\App\Http\Controllers\Api\Admin\AIChatLeadsController::class, 'index']);
+    Route::get('/ai/chat/leads/{id}', [\App\Http\Controllers\Api\Admin\AIChatLeadsController::class, 'show']);
+    Route::put('/ai/chat/leads/{id}/status', [\App\Http\Controllers\Api\Admin\AIChatLeadsController::class, 'updateStatus']);
 });
 
 // Agent routes
@@ -271,6 +276,11 @@ Route::middleware(['auth:sanctum', 'agent'])->prefix('agent')->group(function ()
     Route::put('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'update']);
     Route::post('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'update']); // For form-data
     Route::delete('/blogs/{id}', [\App\Http\Controllers\Api\Agent\BlogController::class, 'destroy']);
+
+    // AI Price Estimation
+    Route::post('/ai/estimate-price', [\App\Http\Controllers\Api\Agent\AIPriceController::class, 'estimate']);
+    Route::get('/ai/price-estimates', [\App\Http\Controllers\Api\Agent\AIPriceController::class, 'history']);
+    Route::get('/ai/price-estimates/{id}', [\App\Http\Controllers\Api\Agent\AIPriceController::class, 'show']);
 });
 
 // Customer routes
@@ -322,6 +332,15 @@ Route::middleware(['auth:sanctum', 'customer'])->prefix('customer')->group(funct
     Route::get('/my-comments', [\App\Http\Controllers\Api\Customer\BlogCommentController::class, 'myComments']);
     Route::put('/comments/{id}', [\App\Http\Controllers\Api\Customer\BlogCommentController::class, 'update']);
     Route::delete('/comments/{id}', [\App\Http\Controllers\Api\Customer\BlogCommentController::class, 'destroy']);
+
+    // AI Property Recommendations
+    Route::post('/ai/recommend', [\App\Http\Controllers\Api\Customer\AIRecommendationController::class, 'recommend']);
+    Route::get('/ai/recommendations', [\App\Http\Controllers\Api\Customer\AIRecommendationController::class, 'history']);
+    Route::get('/ai/recommendations/{id}', [\App\Http\Controllers\Api\Customer\AIRecommendationController::class, 'show']);
+
+    // AI Chatbot
+    Route::post('/ai/chat', [\App\Http\Controllers\Api\Customer\AIChatbotController::class, 'chat']);
+    Route::get('/ai/chat/history/{sessionId}', [\App\Http\Controllers\Api\Customer\AIChatbotController::class, 'history']);
 });
 
 // Rating public APIs
